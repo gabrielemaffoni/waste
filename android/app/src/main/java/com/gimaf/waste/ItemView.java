@@ -37,6 +37,7 @@ public class ItemView extends AppCompatActivity {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.single_item);
+        auth = FirebaseAuth.getInstance();
         Intent intent = getIntent();
         String productKey = intent.getStringExtra(KEY_DB);
         Log.d("EXTRA GOT", productKey);

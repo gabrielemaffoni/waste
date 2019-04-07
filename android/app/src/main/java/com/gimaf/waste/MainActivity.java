@@ -71,6 +71,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
+        fetch();
         recyclerAdapter.startListening();
     }
 
@@ -80,6 +81,8 @@ public class MainActivity extends AppCompatActivity {
         recyclerAdapter.stopListening();
     }
 
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -87,6 +90,7 @@ public class MainActivity extends AppCompatActivity {
         Intent extras = getIntent();
         currentUser = extras.getParcelableExtra("CURRENT_USER");
         BottomNavigationView navigation = findViewById(R.id.navigation);
+        Log.d("GABRIELE", "Activity On Create");
         bar = findViewById(R.id.bar);
         setSupportActionBar(bar);
 
@@ -104,13 +108,24 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
+    protected void onPostResume() {
+        super.onPostResume();
+        Log.d("GABRIELE", "On post resume");
+        fetch();
+        listenToChanged();
+    }
+
+    @Override
     protected void onPostCreate(@Nullable Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
+        Log.d("GABRIELE", "On post create");
         get_token();
+        fetch();
         listenToChanged();
     }
 
     public void get_token() {
+        Log.d("GABRIELE", "Getting token");
         FirebaseInstanceId.getInstance().getInstanceId()
                 .addOnCompleteListener(new OnCompleteListener<InstanceIdResult>() {
                     @Override
@@ -154,6 +169,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void createLayoutManager() {
+        Log.d("GABRIELE", "Creating layout manager");
         layoutManager = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(layoutManager);
         recyclerView.setHasFixedSize(true);
@@ -161,10 +177,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void fetch() {
+        Log.d("GABRIELE", "Fetching");
         Query query = FirebaseDatabase.getInstance()
                 .getReference()
                 .child("items").child(currentUser.getUid());
-
+        Log.d("GABRIELE", "Path to the database: " + query.getPath().toString());
         FirebaseRecyclerOptions<Item> options =
                 new FirebaseRecyclerOptions.Builder<Item>()
                         .setQuery(query, new SnapshotParser<Item>() {
@@ -172,6 +189,7 @@ public class MainActivity extends AppCompatActivity {
                             @Override
                             public Item parseSnapshot(@NonNull DataSnapshot snapshot) {
                                 Item newItem = new Item();
+                                Log.d("GABRIELE", "Found item. Creating item");
                                 try {
                                     newItem.stringToDouble(QUANTITY_DB, snapshot.child(QUANTITY_DB).getValue().toString());
                                     newItem.stringToDouble(QUANTITY_LEFT_DB, snapshot.child(QUANTITY_LEFT_DB).getValue().toString());
@@ -184,12 +202,14 @@ public class MainActivity extends AppCompatActivity {
                                 }
                                 return newItem;
                             }
+
                         })
                         .build();
 
         recyclerAdapter = new FirebaseRecyclerAdapter<Item, ViewHolder>(options) {
             @Override
             public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+                Log.d("GABRIELE", "Inflating in the adapter");
                 View view = LayoutInflater.from(parent.getContext())
                         .inflate(R.layout.single_item_in_list, parent, false);
 
@@ -226,6 +246,7 @@ public class MainActivity extends AppCompatActivity {
             public void onChildAdded(@NonNull final DataSnapshot dataSnapshot, @Nullable String s) {
                 if (dataSnapshot.hasChild("new_product")) {
 
+
                     if (dataSnapshot.child("new_product").getValue().equals("yes")) {
                         update_button.setVisibility(View.VISIBLE);
                         update_message.setVisibility(View.VISIBLE);
@@ -246,21 +267,23 @@ public class MainActivity extends AppCompatActivity {
                 } else if (!dataSnapshot.hasChildren()) {
                     //Do nothing
                 }
+
+                fetch();
             }
 
             @Override
             public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-
+                fetch();
             }
 
             @Override
             public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
-
+                fetch();
             }
 
             @Override
             public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-
+                fetch();
             }
 
             @Override
@@ -289,6 +312,18 @@ public class MainActivity extends AppCompatActivity {
 
         return super.onOptionsItemSelected(item);
 
+    }
+
+    @Override
+    public void onActivityReenter(int resultCode, Intent data) {
+        super.onActivityReenter(resultCode, data);
+        fetch();
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        fetch();
     }
 
     public void logout() {

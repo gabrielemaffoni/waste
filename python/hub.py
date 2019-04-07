@@ -16,7 +16,13 @@ NO_ALARM = "No alarm"
 EMERGENCY_MODE = "light_emergency"
 EMERGENCY_MODE_OFF = "light_emergency_off"
 
-config = 'credentials.json'
+config = {
+    "apiKey": "AIzaSyBPp6hBybehlRJ7YFyN0ph_znlkV-1Xw1c",
+    "authDomain": "waste-c86f8",
+    "databaseURL": "https://waste-c86f8.firebaseio.com/",
+    "storageBucket": "gs://waste-c86f8.appspot.com"
+}
+
 normal_seconds_check = 180
 firebase = pyrebase.initialize_app(config)
 database = firebase.database()
@@ -93,6 +99,7 @@ def upload_item():
 def copy_data(data_to_copy):
     print("Copying data")
     for s_line in data_to_copy:
+        print("Data to copy: %s " % s_line)
         column = s_line.split(":")[0]
         line_clean = s_line.split(":")[1]
         print("%s : %s" % (column, line_clean))
@@ -154,19 +161,32 @@ def read_data_emergency():
                 if "}" in new_line:
                     start_counting = False
                     break
-                elif "RESET_MODE" in line:
+                elif "RESET_MODE" in new_line:
                     first_setup = True
                     break
+                elif "FIRST_SETUP" in new_line:
+                    first_setup = True
+                    break
+                elif "LIGHT_ON!" in new_line:
+                    continue
+                elif "LIGHT_OFF" in new_line:
+                    light_issue = False
+                    continue
+                elif "Waiting for commands" in new_line:
+                    continue
+                elif "Pressing button" in new_line:
+                    continue
+                elif "{" in new_line:
+                    continue
                 else:
                     # Add the decoded data to a new type of line
                     data_for_item = new_line.strip('\r\n')
                     data_reading.append(data_for_item)
 
-        if "RESET_MODE" in line:
+        elif "RESET_MODE" in line:
             first_setup = True
             light_issue = False
-
-        if "LIGHT_OFF" in line:
+        elif "LIGHT_OFF" in line:
             light_issue = False
         else:
             print("No {")
@@ -194,9 +214,23 @@ def read_data():
                     if "}" in new_line:
                         start_counting = False
                         break
-                    elif "RESET_MODE" in line:
+                    elif "RESET_MODE" in new_line:
                         first_setup = True
                         break
+                    elif "FIRST_SETUP" in new_line:
+                        first_setup = True
+                        break
+                    elif "LIGHT_ON!" in new_line:
+                        continue
+                    elif "LIGHT_OFF" in new_line:
+                        light_issue = False
+                        continue
+                    elif "Waiting for commands" in new_line:
+                        continue
+                    elif "Pressing button" in new_line:
+                        continue
+                    elif "{" in new_line:
+                        continue
                     else:
                         # Add the decoded data to a new type of line
                         data_for_item = new_line.strip('\r\n')
@@ -288,6 +322,8 @@ if __name__ == '__main__':
                     print("Key: %s" % tmp_item.key)
                     # Waits for the answer from the database
                     wait_for_data()
+                    # Telling the arduino that the first setup is done
+                    send_request("data got!")
                     #Sends the requests of the data to the Arduino
                     send_request(CHECK_DATA)
                     #Reads the data requested
