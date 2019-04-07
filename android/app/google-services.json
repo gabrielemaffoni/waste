@@ -1,0 +1,42 @@
+{
+  "project_info": {
+    "project_number": "138770705487",
+    "firebase_url": "https://waste-c86f8.firebaseio.com",
+    "project_id": "waste-c86f8",
+    "storage_bucket": "waste-c86f8.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:138770705487:android:35b5ca96d05c3aa4",
+        "android_client_info": {
+          "package_name": "com.gimaf.waste"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "138770705487-1uj849si00huctriq953h5tbab9grvnb.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCIZ3QqSSI5fa0Ze5PjnbTvlVnIpTtkvy4"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

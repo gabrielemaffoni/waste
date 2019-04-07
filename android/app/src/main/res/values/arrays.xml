@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="product_types">
+        <item>Milk</item>
+        <item>Red wine</item>
+        <item>White wine</item>
+        <item>Other thing</item>
+    </string-array>
+    <string-array name="measures">
+        <item>Pints</item>
+        <item>L</item>
+        <item>Ml</item>
+    </string-array>
+</resources>

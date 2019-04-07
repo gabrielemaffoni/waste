@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <Button
+        android:id="@+id/save_product"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/save_product"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <LinearLayout
+        android:id="@+id/wrapper_new_item"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="8dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <TextView
+            android:id="@+id/fill_data_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/fill_all_data"
+            android:textAppearance="@style/TextAppearance.AppCompat.Body1" />
+
+        <TextView
+            android:id="@+id/product_type_label"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="15dp"
+            android:text="@string/product_type"
+            tools:layout_editor_absoluteX="26dp"
+            tools:layout_editor_absoluteY="73dp" />
+
+        <Spinner
+            android:id="@+id/product_type_spinner"
+            android:layout_width="match_parent"
+            android:layout_height="44dp"
+            android:entries="@array/product_types"
+            android:spinnerMode="dropdown" />
+
+        <TextView
+            android:id="@+id/expiration_date_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="15dp"
+            android:text="@string/expiration_date"
+            tools:layout_editor_absoluteX="26dp"
+            tools:layout_editor_absoluteY="73dp" />
+
+        <EditText
+            android:id="@+id/expiration_date_date"
+            android:layout_width="match_parent"
+            android:layout_height="44dp"
+            android:autofillHints="@string/date_autofill"
+            android:ems="10"
+            android:focusable="false"
+            android:hint="@string/pick_a_date"
+            android:inputType="date|datetime"
+            tools:layout_editor_absoluteX="0dp"
+            tools:layout_editor_absoluteY="78dp" />
+
+        <TextView
+            android:id="@+id/brand_label"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="15dp"
+            android:text="@string/brand"
+            tools:layout_editor_absoluteX="26dp"
+            tools:layout_editor_absoluteY="73dp" />
+
+        <EditText
+            android:id="@+id/brand_value"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:autofillHints="@string/brand_label"
+            android:ems="10"
+            android:hint="@string/brand_hint"
+            android:inputType="textPersonName" />
+
+        <TextView
+            android:id="@+id/total_quantity_label"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="15dp"
+            android:text="@string/pack_size_label"
+            tools:layout_editor_absoluteX="26dp"
+            tools:layout_editor_absoluteY="73dp" />
+
+        <LinearLayout
+            android:id="@+id/pack_size_wrapper"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <EditText
+                android:id="@+id/amount_value"
+                android:layout_width="wrap_content"
+                android:layout_height="44dp"
+                android:layout_weight="1"
+                android:autofillHints="@string/amount_example"
+                android:ems="10"
+                android:hint="@string/amount_example_int"
+                android:inputType="textPersonName" />
+
+            <Spinner
+                android:id="@+id/measure_choicer"
+                android:layout_width="wrap_content"
+                android:layout_height="44dp"
+                android:layout_weight="1"
+                android:entries="@array/measures" />
+        </LinearLayout>
+
+    </LinearLayout>
+
+</android.support.constraint.ConstraintLayout>
