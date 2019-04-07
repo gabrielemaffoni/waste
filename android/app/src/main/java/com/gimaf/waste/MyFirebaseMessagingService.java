@@ -97,6 +97,12 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                 case "PRODUCT_FINISHING":
                     viewclass = ItemView.class;
                     break;
+                case "PRODUCT_EXPIRING":
+                    viewclass = ItemView.class;
+                    break;
+                case "PRODUCT_EXPIRED":
+                    viewclass = ItemView.class;
+                    break;
                 default:
                     viewclass = SetNewProduct.class;
                     break;
