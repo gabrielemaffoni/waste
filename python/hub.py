@@ -16,13 +16,7 @@ NO_ALARM = "No alarm"
 EMERGENCY_MODE = "light_emergency"
 EMERGENCY_MODE_OFF = "light_emergency_off"
 
-config = {
-    "apiKey": "AIzaSyBPp6hBybehlRJ7YFyN0ph_znlkV-1Xw1c",
-    "authDomain": "waste-c86f8",
-    "databaseURL": "https://waste-c86f8.firebaseio.com/",
-    "storageBucket": "gs://waste-c86f8.appspot.com"
-}
-
+config = 'credentials.json'
 normal_seconds_check = 180
 firebase = pyrebase.initialize_app(config)
 database = firebase.database()
