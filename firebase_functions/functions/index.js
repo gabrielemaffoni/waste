@@ -52,13 +52,13 @@ exports.temperature_alarm = functions.database.ref('/items/{userID}/{itemID}/').
 exports.monitor_quantity = functions.database.ref('items/{userID}/{itemID}/current_quantity').onUpdate((snapshot, context)=>{
   console.log("Checking quantity");
   const quantity_atm = snapshot.after.val();
-  const product_type = admin.database.ref(`items/${user_id}/${product_id}/product_type`).once('value').then((d_snapshot) => {return d_snapshot.val()}, (error) => {console.log(error)});
   const product_id = context.params.itemID;
   const user_id = context.params.userID;
-  const total_quantity = admin.database.ref(`items/${user_id}/${product_id}/total_quantity`).once('value').then((quantity_snap)=>{
+  const product_type = admin.database().ref(`items/${user_id}/${product_id}/product_type`).once('value').then((d_snapshot) => {return d_snapshot.val()}, (error) => {console.log(error)});
+  const total_quantity = admin.database().ref(`items/${user_id}/${product_id}/total_quantity`).once('value').then((quantity_snap)=>{
     return quantity_snap.val();
   }, (error) => {console.log(error)});
-  const token = admin.database.ref(`users/${user_id}/token`).once('value').then((token_snap) => {
+  const token = admin.database().ref(`users/${user_id}/token`).once('value').then((token_snap) => {
     return token_snap.val();
   },(error) => {
     console.log(error)
@@ -67,7 +67,8 @@ exports.monitor_quantity = functions.database.ref('items/{userID}/{itemID}/curre
   console.log("Total quantity", total_quantity);
   var payload = "";
   if (quantity_atm < (total_quantity/4) && quantity_atm > 0){
-    payload = { "notification": {
+    payload = {
+      "notification": {
       "title" : `Your ${product_type} is almost finishing!`,
       "body"  : `Do you have it in your pantry?`
     },
@@ -154,4 +155,47 @@ exports.send_new_product_notification = functions.database.ref('/items/{userID}/
     console.log(error);
   });
 
+});
+
+exports.product_expiring_notification = functions.database.ref('items/{userID}/{itemID}/').onUpdate((snapshot, context) =>{
+  const expiration_days = snapshot.after.child('expiration_days').val();
+  const user_id = context.params.userID;
+  const product_key = context.params.itemID;
+  if (expiration_days === 0){
+    const token_snapshot = admin.database().ref(`/users/${user_id}/token/`).once('value').then((data_snapshot) => {
+      const payload = {
+        "notification": {
+          "title": `Your product expires today!`,
+          "body": 'Do you need some ideas on how to use it?',
+        },
+        "data": {
+          "item_key": product_key,
+          "intent_notification":"PRODUCT_EXPIRING"
+        }
+      };
+
+      return admin.messaging().sendToDevice(data_snapshot.val(), payload);
+    }, (error) => {
+      console.log(error);
+    });
+  }
+  else if (expiration_days < 4){
+    const token_snapshot = admin.database().ref(`/users/${user_id}/token/`).once('value').then((data_snapshot) => {
+      const payload = {
+        "notification": {
+          "title": `Your product is expiring in ${expiration_days} days!`,
+          "body": 'Finish it quickly, before you have to throw it away. Do you need some ideas?',
+        },
+        "data": {
+          "item_key": product_key,
+          "intent_notification":"PRODUCT_EXPIRING"
+        }
+      };
+
+      return admin.messaging().sendToDevice(data_snapshot.val(), payload);
+    }, (error) => {
+      console.log(error);
+    });
+  }
+  return expiration_days
 });
