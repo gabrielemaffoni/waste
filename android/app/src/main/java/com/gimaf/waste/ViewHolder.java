@@ -22,8 +22,9 @@ public class ViewHolder extends RecyclerView.ViewHolder {
         wrapper = itemView.findViewById(R.id.wrapper);
         type_and_quantity = itemView.findViewById(R.id.type_and_total_quantity);
         quantity_left = itemView.findViewById(R.id.current_quantity);
-        message = itemView.findViewById(R.id.message);
+        message = itemView.findViewById(R.id.brand_table_view);
     }
+
 
     public void setType_and_quantity(String type_and_quantity) {
         this.type_and_quantity.setText(type_and_quantity);
