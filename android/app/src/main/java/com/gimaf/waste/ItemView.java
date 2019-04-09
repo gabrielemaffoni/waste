@@ -68,11 +68,17 @@ public class ItemView extends AppCompatActivity {
             optimal_temperature.setText(String.format(getResources().getString(R.string.double_format), item.getOptimal_temperature()));
             brand_text.setText(String.format(getResources().getString(R.string.double_format), item.getTotal_quantity()));
             product_type.setText(item.getProduct_type());
-            quantity_left.setText(String.format(getResources().getString(R.string.double_format), item.getCurrent_quantity()));
+            String text_for_quantity = String.format(getResources().getString(R.string.double_format),
+                    item.getCurrent_quantity()) + " "+item.getMeasure();
+            quantity_left.setText(text_for_quantity);
+            if (item.getCurrent_quantity() <= 0){
+                quantity_left.setText(getResources().getText(R.string.finished_product));
+                quantity_left.setTextColor(getColor(R.color.red_error));
+            }
             brand_field.setText(item.getBrand());
             int_temperature.setText(String.format(getResources().getString(R.string.double_format), item.getInternal_temperature()));
             ext_temperature.setText(String.format(getResources().getString(R.string.double_format), item.getExternal_temperature()));
-            expiration_date.setText(item.getExpiration_date());
+            expiration_date.setText(item.getExpiration_date()); //TODO: Solve the problem for which it doesn't print the expiration date correctly. Is it for some problem'!
             this.setTitle(item.getProduct_type());
         } catch (NullPointerException exception) {
             Log.d("Exception", exception.getMessage());

@@ -3,6 +3,7 @@ package com.gimaf.waste;
 
 import android.content.Context;
 import android.util.ArrayMap;
+import android.util.Log;
 import android.widget.Toast;
 
 import com.google.firebase.database.DataSnapshot;
@@ -29,6 +30,7 @@ public class Item {
     public static final String MEASURE_DB = "measure";
     public static final String KEY_DB = "item_key";
     public static final String NEW_PRODUCT_DB = "new_product";
+    public static final String EXPIRATION_DAYS_DB = "expiration_days";
     private Double current_quantity;
     private Double total_quantity;
     private String measure;
@@ -39,12 +41,13 @@ public class Item {
     private Double internal_temperature;
     private Double external_temperature;
     private Double optimal_temperature;
+    private int expiration_days;
 
     public Item() {
         //Default required for Datasnapshot
     }
 
-    public Item(String item_key, Double current_quantity, Double total_quantity, String measure, String product_type, String expiration_date, String brand, Double internal_temperature, Double external_temperature, Double optimal_temperature) {
+    public Item(String item_key, Double current_quantity, Double total_quantity, String measure, String product_type, String expiration_date, String brand, Double internal_temperature, Double external_temperature, Double optimal_temperature, int expiration_days) {
         this.item_key = item_key;
         this.current_quantity = current_quantity;
         this.total_quantity = total_quantity;
@@ -55,7 +58,7 @@ public class Item {
         this.internal_temperature = internal_temperature;
         this.external_temperature = external_temperature;
         this.optimal_temperature = optimal_temperature;
-
+        this.expiration_days = expiration_days;
     }
 
     /**
@@ -143,6 +146,13 @@ public class Item {
         this.brand_product = brand;
     }
 
+    public void setExpiration_days(int days){
+        this.expiration_days = days;
+    }
+    public int getExpiration_days(){
+        return expiration_days;
+    }
+
     /**
      * Converts input Strings to double when required
      * @param thingToSet What is the key of the value
@@ -201,8 +211,9 @@ public class Item {
      */
     public void setFromDataSnapshot(DataSnapshot dataSnapshot, Context context) {
         this.setItem_key(dataSnapshot.getKey());
+
         //Log.d("SNAPSHOT", dataSnapshot.getRef().getPath().toString());
-        //Log.d("BRAND", dataSnapshot.child(BRAND_DB).getValue().toString());
+        Log.d("EXP DATE", dataSnapshot.child(EXPIRATION_DATE_DB).getValue().toString());
         try {
             this.setBrand(dataSnapshot.child(BRAND_DB).getValue().toString());
             this.setMeasure(dataSnapshot.child(MEASURE_DB).getValue().toString());
@@ -214,6 +225,7 @@ public class Item {
             this.stringToDouble(INTERNAL_TEMPERATURE_DB, dataSnapshot.child(INTERNAL_TEMPERATURE_DB).getValue().toString());
             this.stringToDouble(EXTERNAL_TEMPERATURE_DB, dataSnapshot.child(EXTERNAL_TEMPERATURE_DB).getValue().toString());
             this.stringToDouble(OPTIMAL_TEMPERATURE_DB, dataSnapshot.child(OPTIMAL_TEMPERATURE_DB).getValue().toString());
+            this.setExpiration_date(dataSnapshot.child(EXPIRATION_DATE_DB).getValue().toString());
         } catch (NullPointerException exception) {
             Toast.makeText(context, exception.getMessage(), Toast.LENGTH_SHORT).show();
         }

@@ -47,4 +47,5 @@
     <string name="opt_temperature">Optimal temperature</string>
     <string name="gradient_background">Gradient background</string>
     <string name="signup_subtitle">to become the new Batman.</string>
+    <string name="finished_product">It\'s finished! :(</string>
 </resources>

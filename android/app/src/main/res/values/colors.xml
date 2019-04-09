@@ -9,6 +9,7 @@
     <color name="colorAccent">#3BB54A</color>
     <color name="colorBlack">#000</color>
     <color name="red_error">#B23B4D</color>
+    <color name="yellow">#CFA549</color>
     <color name="mtrl_textinput_default_box_stroke_color" tools:override="true">
         @color/colorPrimaryDark
     </color>

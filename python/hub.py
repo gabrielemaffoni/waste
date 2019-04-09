@@ -51,10 +51,10 @@ General -> Scroll to down and click on "Add app" -> Select "</>" -> Get the data
 
 
 config = {
-    "apiKey": "AIzaSyBPp6hBybehlRJ7YFyN0ph_znlkV-1Xw1c",
-    "authDomain": "waste-c86f8",
-    "databaseURL": "https://waste-c86f8.firebaseio.com/",
-    "storageBucket": "gs://waste-c86f8.appspot.com"
+    "apiKey": "AIzaSyDNcuaodUY1vxhP2xG_VLdD6sZQadIZ67g",
+    "authDomain": "waste-17fee",
+    "databaseURL": "https://waste-17fee.firebaseio.com/",
+    "storageBucket": "gs://waste-17fee.appspot.com"
 }
 
 
@@ -276,10 +276,15 @@ Gets data from the database, makes it convert them and then uploads them on the 
 
 
 def set_total_quantity():
+    print('updating total quantity')
     total_quantity_db = float(database.child('items').child(user_id).child(tmp_item.key).child(PACK_SIZE).get().val())
+    print("Quantity got is %s " % total_quantity_db)
     tmp_item.pack_measure = database.child('items').child(user_id).child(tmp_item.key).child(PACK_MEASURE).get().val()
+    print("Pack measure is %s" % tmp_item.pack_measure)
     tmp_item.pack_size = analyse_total_quantity(total_quantity_db)
-    database.child('items').child(user_id).child(tmp_item.key).child(PACK_SIZE).update(tmp_item.pack_size)
+    print("Final pack size is: %s" % tmp_item.pack_size)
+    database.child('items').child(user_id).child(tmp_item.key).update(tmp_item.data_to_update_total_quantity())
+
 
 
 """
@@ -301,8 +306,20 @@ def read_data():
     time.sleep(5)  # !IMPORTANT. This waiting time is key, because otherwise Arduino and raspberry won't go in sync.
     if serialPort.inWaiting() > 0:  # If there is any new string in the serial. this check is important,
         # otherwise the code will just stay stuck.
-        line = serialPort.readline().decode()  # .decode() is essential to decode from byte type.
-        print("Line is: %s" % line)
+        line = ""
+        while "{" not in line:
+            line = serialPort.readline().decode()  # .decode() is essential to decode from byte type.
+            print("Line is: %s" % line)
+            # If at the beginning we don't get the start of JSON, we then don't read anything else anymore
+            if "RESET_MODE" in line:
+                first_setup = True
+                light_issue = False
+                break
+            # Same here
+            if "LIGHT_OFF" in line:
+                light_issue = False
+                break
+            # If there is ANY other message
         # If the line has a new starting point we will start reading as JSON.
         if "{" in line:
             # Boolean required to use the while loop to read all data.
@@ -356,6 +373,7 @@ def read_data():
             light_issue = False
         # If there is ANY other message
         else:
+            print(line)
             print("No {")
     # IF in general there is no serial available, handle it by writing that the Serial Monitor is not ready.
     else:
@@ -369,7 +387,6 @@ Keeps checking the data more frequently until told otherwise. If it keeps being 
 """
 
 # TODO: send a reminder on the database after some time to place the item back in the fridge!
-#  It's now only based on temperature
 
 
 def emergency_mode():
@@ -478,6 +495,7 @@ if __name__ == '__main__':
                     wait_for_data()
                     # Telling the arduino that the first setup is done
                     send_request("data got!")
+                    time.sleep(5)
                     # Sends the requests of the data to the Arduino
                     send_request(CHECK_DATA)
                     # Reads the data requested
@@ -491,11 +509,11 @@ if __name__ == '__main__':
                     new_check_time = set_check_time()
                     # Ends the setup
                     first_setup = False
-                    print('Ended first setup!')
                     # Tells the Arduino how many days left to the expiration date
                     set_expiration_date()
                     # Sets total quantity
                     set_total_quantity()
+                    print('Ended first setup!')
 
             # if the light counter isn't 5 or more, we just wait for 3 seconds
             if 0 < light_counter < 5:

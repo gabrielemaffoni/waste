@@ -88,7 +88,7 @@ public class SetNewProduct extends AppCompatActivity implements AdapterView.OnIt
             @Override
             public void onClick(View v) {
                 //check data
-                String pack_size = pack_size_text.getText().toString();
+                Double pack_size = Double.parseDouble(pack_size_text.getText().toString());
                 String brand_final_text = brand_text.getText().toString();
                 String expiration_date = expiration_date_text.getText().toString();
 
@@ -96,10 +96,10 @@ public class SetNewProduct extends AppCompatActivity implements AdapterView.OnIt
                 product_type_selected = product_type_dropdown.getSelectedItem().toString();
 
 
-                if (pack_size.isEmpty() || brand_final_text.isEmpty() || expiration_date.isEmpty() || measure_selected.isEmpty() || product_type_selected.isEmpty()) {
+                if (pack_size == 0 || brand_final_text.isEmpty() || expiration_date.isEmpty() || measure_selected.isEmpty() || product_type_selected.isEmpty()) {
                     Toast.makeText(SetNewProduct.this, "Please, fill all the field first!", Toast.LENGTH_SHORT).show();
                 } else {
-                    if (pack_size.matches("[0-9]+")) {
+                    if (pack_size_text.getText().toString().matches("[0-9]+")) {
                         updateFirebase(productKey, pack_size, brand_final_text, expiration_date);
                         Toast.makeText(SetNewProduct.this, "Product uploaded!", Toast.LENGTH_SHORT).show();
                         finish();
@@ -163,7 +163,7 @@ public class SetNewProduct extends AppCompatActivity implements AdapterView.OnIt
      * @param brandText the brand of the product
      * @param expirationDate the expiration date set by the user
      */
-    public void updateFirebase(String productKey, String packSize, String brandText,
+    public void updateFirebase(String productKey, Double packSize, String brandText,
                                String expirationDate) {
         DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference()
                 .child("items").child(currentUser.getUid()).child(productKey);

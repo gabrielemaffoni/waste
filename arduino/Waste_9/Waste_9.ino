@@ -119,7 +119,7 @@ void loop() {
       Serial.println("FIRST_SETUP!");
       // We visually say to the user that it's first setup mode by multicolouring our LED
       while(Serial.available() == 0){
-        blink_led_multicolor(500);
+        //blink_led_multicolor(500);
       }
    }
     // While there is no message from the Raspberry
@@ -184,13 +184,13 @@ void first_led_check(){
   // Simply changes colours to the LED in 2 seconds
   Serial.println("Checking LED!");
   white();
-  delay(500);
+  delay(250);
   blue();
-  delay(500);
+  delay(250);
   red();
-  delay(500);
+  delay(250);
   green();
-  delay(500);
+  delay(250);
   black();
   Serial.println("Led checked!");
 }
@@ -386,7 +386,7 @@ void get_temperature(){
 
 void get_distance(){
   float quantity = tof_sensor.getDistance();
-  doc["quantity_left"]= quantity;
+  doc["quantity_mm"] = quantity;
 
 }
 

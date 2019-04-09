@@ -42,7 +42,7 @@ class Item:
                  expiration_date=EXPIRATION_DATE, optimal_temperature=OPTIMAL_TEMPERATURE,
                  current_temperature=CURRENT_TEMPERATURE,
                  brand=BRAND, stream_number=STREAM_NUMBER, external_temperature=EXTERNAL_TEMPERATURE,
-                 luminosity=LUMINOSITY, key=KEY, pack_size= PACK_SIZE, pack_measure= PACK_MEASURE):
+                 luminosity=LUMINOSITY, key=KEY, pack_size=PACK_SIZE, pack_measure=PACK_MEASURE):
         """
         :param product_type: The type of product set on the database
         :param quantity: How much is left in mm
@@ -85,6 +85,16 @@ class Item:
                 EXTERNAL_TEMPERATURE: self.external_temperature,
                 LUMINOSITY: self.luminosity,
                 OPTIMAL_TEMPERATURE: 0
+        }
+
+        return data
+
+    """
+    Returns a json format of total quantity defined
+    """
+    def data_to_update_total_quantity(self):
+        data = {
+            PACK_SIZE: self.pack_size
         }
 
         return data
