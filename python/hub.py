@@ -43,17 +43,22 @@ LIGHT_ISSUE = "Light issue"
 NO_ALARM = "No alarm"
 EMERGENCY_MODE = "light_emergency"
 EMERGENCY_MODE_OFF = "light_emergency_off"
+
+
 """
 These are data required by Firebase to run. Use yours, please.
 You can easily find them if you go on your Firebase console -> Tog on the upper left -> /
 General -> Scroll to down and click on "Add app" -> Select "</>" -> Get the data inside "<script>"
 """
+
+
 config = {
     "apiKey": "AIzaSyBPp6hBybehlRJ7YFyN0ph_znlkV-1Xw1c",
     "authDomain": "waste-c86f8",
     "databaseURL": "https://waste-c86f8.firebaseio.com/",
     "storageBucket": "gs://waste-c86f8.appspot.com"
 }
+
 
 # General variables
 normal_seconds_check = 180  # The Raspberry will ask the data every 3 minutes if needed.
