@@ -1,7 +1,15 @@
-#  Copyright (c) 2019. Gabriele Maffoni - All rights reserved.
-import pyrebase
-import datetime
 
+"""
+Copyright (c) 2019. Gabriele Maffoni - All rights reserved.
+This class is a representation of the Item in the database. All the constants are the values that
+are going to be uploaded on the db.
+
+CHANGELOG:
+- Deleted unused methods and variables
+- Added documentation
+"""
+import datetime
+# Constant values for database
 PRODUCT_TYPE = "product_type"
 QUANTITY = "quantity_mm"
 QUANTITY_LEFT = "quantity_left"
@@ -10,20 +18,42 @@ OPTIMAL_TEMPERATURE = "opt_temperature"
 EXTERNAL_TEMPERATURE = "ext_temperature"
 CURRENT_TEMPERATURE = "int_temperature"
 BRAND = "brand"
-ALARM = "alarm"
+# A stream number is important in case someone wants to check earlier streams in the buffer.
+# Won't use it anywhere at the moment, though.
 STREAM_NUMBER = "stream_number"
 LUMINOSITY = "luminosity"
 LATEST_UPDATE = 'latest update'
 KEY = 'key'
-# Constant values for database
+
+
+"""
+The Item contains few methods so far, mainly to upload data. The rest is set easily by using variable.constant = value.
+"""
+
+
 class Item:
+    """
+    Empty definer to avoid crash
 
-
+    """
     def __init__(self, product_type=PRODUCT_TYPE, quantity=QUANTITY, quantity_left=QUANTITY_LEFT,
                  expiration_date=EXPIRATION_DATE, optimal_temperature=OPTIMAL_TEMPERATURE,
                  current_temperature=CURRENT_TEMPERATURE,
-                 brand=BRAND, alarm=ALARM, stream_number=STREAM_NUMBER, external_temperature=EXTERNAL_TEMPERATURE,
+                 brand=BRAND, stream_number=STREAM_NUMBER, external_temperature=EXTERNAL_TEMPERATURE,
                  luminosity=LUMINOSITY, key=KEY):
+        """
+        :param product_type: The type of product set on the database
+        :param quantity: How much is left in mm
+        :param quantity_left: How much is left converted
+        :param expiration_date: What's the expiration date, in string format
+        :param optimal_temperature: What is the optimal temperature from the database
+        :param current_temperature: What is the current internal temperature value
+        :param brand: What is the brand of the product
+        :param stream_number: The stream number
+        :param external_temperature: the temperature external of the product
+        :param luminosity: Self explanatory
+        :param key: The key assigned at the beginning of the setup from the database itself.
+        """
         self.product_type = product_type
         self.quantity = quantity
         self.quantity_left = quantity_left
@@ -32,73 +62,25 @@ class Item:
         self.current_temperature = current_temperature
         self.external_temperature = external_temperature
         self.brand = brand
-        self.alarm = alarm
         self.stream_number = stream_number
         self.luminosity = luminosity
         self.key = key
 
-    def get_data(self):
-        data = {
-                PRODUCT_TYPE: self.product_type,
-                QUANTITY: self.quantity,
-                QUANTITY_LEFT: self.quantity_left,
-                EXPIRATION_DATE: self.expiration_date,
-                OPTIMAL_TEMPERATURE: self.optimal_temperature,
-                CURRENT_TEMPERATURE: self.current_temperature,
-                BRAND: self.brand,
-                ALARM: self.alarm,
-                STREAM_NUMBER: self.stream_number,
-                EXTERNAL_TEMPERATURE: self.external_temperature,
-                'origin': 'get_data'
-
-        }
-
-        return data
-
-    def get_type(self):
-        return self.product_type
-
+    """
+    Returns a json format of all the data required to be sent  on the database.
+    
+    @:returns data used to update
+    """
     #   Method to update data already existent in the database
     def data_to_update(self):
         data = {
+                # Sets also a new last update.
                 LATEST_UPDATE: datetime.datetime.now().strftime('%d/%m/%y - %H:%M:%S'),
                 QUANTITY_LEFT: self.quantity_left,
                 CURRENT_TEMPERATURE: self.current_temperature,
                 EXTERNAL_TEMPERATURE: self.external_temperature,
                 LUMINOSITY: self.luminosity,
-                OPTIMAL_TEMPERATURE: 0,
-                'origin': 'data_to_update'
+                OPTIMAL_TEMPERATURE: 0
         }
 
         return data
-
-    def upload_all_data(self):
-
-        data = {
-
-                LATEST_UPDATE: datetime.datetime.now().strftime('%d/%m/%y - %H:%M:%S'),
-                QUANTITY_LEFT: self.quantity_left,
-                CURRENT_TEMPERATURE: self.current_temperature,
-                STREAM_NUMBER: self.stream_number,
-                EXTERNAL_TEMPERATURE: self.external_temperature,
-                OPTIMAL_TEMPERATURE: 0,
-                'origin': 'upload_all_data'
-
-        }
-        return data
-
-    def download_all_data(self, database_reference):
-        data_downloaded = database_reference.get()
-        for data in data_downloaded:
-            print(data)
-
-    def assign_all_data(self, data_downloaded, item):
-        for data in data_downloaded.each():
-            if CURRENT_TEMPERATURE in data[0]:
-                item.current_temperature = data[1]
-            if EXTERNAL_TEMPERATURE in data[0]:
-                item.external_temperature = data[1]
-            if OPTIMAL_TEMPERATURE in data[0]:
-                item.optimal_temperature = data[1]
-            if STREAM_NUMBER in data[0]:
-                item.stream_number = data[1]

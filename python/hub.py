@@ -21,7 +21,7 @@ CHANGELOG:
 - Added clearer printings
 """
 
-
+import pyrebase
 import platform  # Needed to find what the port is
 import time  # Needed to find out the time lag between processes
 import serial  # Needed to communicate with Bluno Beetle
@@ -186,7 +186,7 @@ Allows the data to be copied in the tmp_item.
 @:parameter a map of data which is returned by read_data()  method.
 """
 
-
+# TODO: add a method that converts quantity from arduino to normal quantity.
 def copy_data(data_to_copy):
     print("Copying data")
     for s_line in data_to_copy:
