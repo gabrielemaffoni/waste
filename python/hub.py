@@ -165,15 +165,6 @@ def read_all_startup_lines():
 
 
 """
-This method will upload all the data of the general item to firebase. See more in the Item class
-"""
-
-
-def upload_all_data():
-    database.child('items').child(user_id).child(tmp_item.key).set(tmp_item.data_to_update())
-
-
-"""
 This method will update the data on an existent Item in the database. Notice the difference between the previous and the other method.
 One uses ".set()" method. This one uses ".update()" which doesn't overwrite ALL the data but just the ones on the lines.
 """
@@ -204,8 +195,8 @@ def copy_data(data_to_copy):
             tmp_item.current_temperature = float(line_clean.strip(","))
         if 'ext_temperature' in column:
             tmp_item.external_temperature = float(line_clean.strip(","))
-        if 'quantity_left' in column:
-            tmp_item.quantity_left = int(line_clean.strip(","))
+        if 'quantity_mm' in column:
+            tmp_item.quantity = int(line_clean.strip(","))
             # from the data structure, being the last in the JSON luminosity doesn't have any comma in the end.
             # Hence we won't take out the comma.
         if 'luminosity' in column:
@@ -260,6 +251,35 @@ Asks the database what's the real optimal temperature. It is set by firebase fun
 def set_optimal_temperature():
     optimal_tmp = float(database.child('items').child(user_id).child(tmp_item.key).child('opt_temperature').get().val())
     tmp_item.optimal_temperature = optimal_tmp
+
+
+"""
+Analyses the data from the database and converts the pints and liters to ml. If something else is there it just pastes it
+"""
+
+
+def analyse_total_quantity(quantity_to_analyse):
+    global pack_to_return
+    if "Pints" in tmp_item.pack_measure:
+        pack_to_return = quantity_to_analyse*568
+    elif "L" in tmp_item.pack_measure:
+        pack_to_return = quantity_to_analyse*1000
+    else:
+        pack_to_return = quantity_to_analyse
+
+    return pack_to_return
+
+
+"""
+Gets data from the database, makes it convert them and then uploads them on the dataabse again
+"""
+
+
+def set_total_quantity():
+    total_quantity_db = float(database.child('items').child(user_id).child(tmp_item.key).child(PACK_SIZE).get().val())
+    tmp_item.pack_measure = database.child('items').child(user_id).child(tmp_item.key).child(PACK_MEASURE).get().val()
+    tmp_item.pack_size = analyse_total_quantity(total_quantity_db)
+    database.child('items').child(user_id).child(tmp_item.key).child(PACK_SIZE).update(tmp_item.pack_size)
 
 
 """
@@ -362,13 +382,14 @@ def emergency_mode():
         data_to_upload = read_data()
         if light_issue:
             copy_data(data_to_upload)
-            upload_all_data()
+            update_item()
         time.sleep(10)
         # If the current temperature is lower than the optimal one, then it can stay calmer.
-        if float(tmp_item.current_temperature) < tmp_item.optimal_temperature:
-            light_counter = 0
-            light_issue = False
-            break
+        if tmp_item.current_temperature is not 'int_temperature':
+            if float(tmp_item.current_temperature) < tmp_item.optimal_temperature:
+                light_counter = 0
+                light_issue = False
+                break
 
 
 """
@@ -473,11 +494,13 @@ if __name__ == '__main__':
                     print('Ended first setup!')
                     # Tells the Arduino how many days left to the expiration date
                     set_expiration_date()
+                    # Sets total quantity
+                    set_total_quantity()
 
             # if the light counter isn't 5 or more, we just wait for 3 seconds
             if 0 < light_counter < 5:
                 time.sleep(3)
-            # If intead we see that the light is still on, we will run in "emergency mode"
+            # If instead we see that the light is still on, we will run in "emergency mode"
             elif light_counter >= 5:
                 light_issue = True
                 emergency_mode()

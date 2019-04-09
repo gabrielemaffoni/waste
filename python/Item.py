@@ -18,6 +18,8 @@ OPTIMAL_TEMPERATURE = "opt_temperature"
 EXTERNAL_TEMPERATURE = "ext_temperature"
 CURRENT_TEMPERATURE = "int_temperature"
 BRAND = "brand"
+PACK_SIZE = "total_quantity"
+PACK_MEASURE = "measure"
 # A stream number is important in case someone wants to check earlier streams in the buffer.
 # Won't use it anywhere at the moment, though.
 STREAM_NUMBER = "stream_number"
@@ -40,7 +42,7 @@ class Item:
                  expiration_date=EXPIRATION_DATE, optimal_temperature=OPTIMAL_TEMPERATURE,
                  current_temperature=CURRENT_TEMPERATURE,
                  brand=BRAND, stream_number=STREAM_NUMBER, external_temperature=EXTERNAL_TEMPERATURE,
-                 luminosity=LUMINOSITY, key=KEY):
+                 luminosity=LUMINOSITY, key=KEY, pack_size= PACK_SIZE, pack_measure= PACK_MEASURE):
         """
         :param product_type: The type of product set on the database
         :param quantity: How much is left in mm
@@ -54,6 +56,7 @@ class Item:
         :param luminosity: Self explanatory
         :param key: The key assigned at the beginning of the setup from the database itself.
         """
+        self.pack_size = pack_size
         self.product_type = product_type
         self.quantity = quantity
         self.quantity_left = quantity_left
@@ -65,6 +68,7 @@ class Item:
         self.stream_number = stream_number
         self.luminosity = luminosity
         self.key = key
+        self.pack_measure = pack_measure
 
     """
     Returns a json format of all the data required to be sent  on the database.
@@ -76,7 +80,7 @@ class Item:
         data = {
                 # Sets also a new last update.
                 LATEST_UPDATE: datetime.datetime.now().strftime('%d/%m/%y - %H:%M:%S'),
-                QUANTITY_LEFT: self.quantity_left,
+                QUANTITY: self.quantity,
                 CURRENT_TEMPERATURE: self.current_temperature,
                 EXTERNAL_TEMPERATURE: self.external_temperature,
                 LUMINOSITY: self.luminosity,
