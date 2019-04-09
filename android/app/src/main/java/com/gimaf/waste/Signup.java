@@ -19,6 +19,9 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
+/**
+ * Similar to sign in, this view will just create a new user on the database
+ */
 public class Signup extends AppCompatActivity implements Button.OnClickListener {
     private EditText email;
     private EditText password;
@@ -42,6 +45,9 @@ public class Signup extends AppCompatActivity implements Button.OnClickListener 
 
     }
 
+    /**
+     * Checks the current user at the beginning
+     */
     @Override
     protected void onStart() {
         super.onStart();
@@ -49,11 +55,13 @@ public class Signup extends AppCompatActivity implements Button.OnClickListener 
         checkIfUserExist(currentUser);
     }
 
-
+    /**
+     * Checks which button is clicked and acts as consequence
+     * @param v  The clicked button
+     */
     @Override
     public void onClick(View v) {
         int id = v.getId();
-
         if (id == signin.getId()) {
             goToLogin();
         } else if (id == signup.getId()) {
@@ -61,6 +69,9 @@ public class Signup extends AppCompatActivity implements Button.OnClickListener 
         }
     }
 
+    /**
+     * If they press on "Login" we will send them at the login page
+     */
     public void goToLogin() {
         Intent loginIntent = new Intent(this, Login.class);
         startActivity(loginIntent);
@@ -69,17 +80,23 @@ public class Signup extends AppCompatActivity implements Button.OnClickListener 
 
     public void goToMainPage(FirebaseUser user) {
         Intent mainPage = new Intent(this, MainActivity.class);
-        mainPage.putExtra("CURRENT_USER", user);
         startActivity(mainPage);
         finish();
     }
 
+    /**
+     * If the user does exist, we'll send them to the main page
+     * @param user
+     */
     public void checkIfUserExist(FirebaseUser user) {
         if (user != null) {
             goToMainPage(user);
         }
     }
 
+    /**
+     * Checks that all the fields are filled. if not, it avoids crashing by showing a Toast.
+     */
     public void createNewAccount() {
         if (!email.getText().toString().isEmpty() && !password.getText().toString().isEmpty()) {
             createNewUser(email.getText().toString(), password.getText().toString());
@@ -92,6 +109,7 @@ public class Signup extends AppCompatActivity implements Button.OnClickListener 
         auth.createUserWithEmailAndPassword(email, password).addOnCompleteListener(new OnCompleteListener<AuthResult>() {
             @Override
             public void onComplete(@NonNull Task<AuthResult> task) {
+                // If the user is created
                 if (task.isSuccessful()) {
 
                     Toast.makeText(Signup.this, "You created a new account!", Toast.LENGTH_SHORT).show();
@@ -110,6 +128,12 @@ public class Signup extends AppCompatActivity implements Button.OnClickListener 
             }
         });
     }
+
+    /**
+     * Creates new items in the different databases.
+     * This way we can handle there is no crash whatsoever when it comes to uploading data there.
+     * @param user The user Just created.
+     */
 
     private void createDatabaseVoices(FirebaseUser user) {
         database = FirebaseDatabase.getInstance().getReference();

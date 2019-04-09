@@ -1,12 +1,10 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!--
+<?xml version="1.0" encoding="utf-8"?><!--
   ~ Copyright (c) 2019. Gabriele Maffoni.
   ~ All rights reserved. This code is intended to be used only by people who really want to save the planet. Hence, do not try to steal from anything. Feel free to add ideas, but I won't monitor that much GitHub. Peace and love guys.
   -->
 
 <font-family xmlns:app="http://schemas.android.com/apk/res-auto"
-        app:fontProviderAuthority="com.google.android.gms.fonts"
-        app:fontProviderPackage="com.google.android.gms"
-        app:fontProviderQuery="Raleway"
-        app:fontProviderCerts="@array/com_google_android_gms_fonts_certs">
-</font-family>
+    app:fontProviderAuthority="com.google.android.gms.fonts"
+    app:fontProviderCerts="@array/com_google_android_gms_fonts_certs"
+    app:fontProviderPackage="com.google.android.gms"
+    app:fontProviderQuery="Raleway"></font-family>

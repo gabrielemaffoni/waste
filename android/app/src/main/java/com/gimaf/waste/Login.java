@@ -10,7 +10,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -20,6 +19,10 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+
+/**
+ * This view permits the user to log in to their account
+ */
 
 public class Login extends AppCompatActivity implements Button.OnClickListener {
 
@@ -51,7 +54,15 @@ public class Login extends AppCompatActivity implements Button.OnClickListener {
 
     }
 
+    /**
+     * This method checks if the user exists and log them in. If so, they will go directly to the main page.
+     *
+     * @param password_text Password got from the field
+     * @param email_text Email got from the field
+     */
     private void logUserIn(String password_text, String email_text) {
+
+        // Uses the Firebase Auth method .signInWithEmailAndPassword
         auth.signInWithEmailAndPassword(email_text, password_text).addOnCompleteListener(new OnCompleteListener<AuthResult>() {
             @Override
             public void onComplete(@NonNull Task<AuthResult> task) {
@@ -65,6 +76,9 @@ public class Login extends AppCompatActivity implements Button.OnClickListener {
         });
     }
 
+    /**
+     * At the beginning checks if the user is already logged in. If so, they redirect them directly to the main page
+     */
     @Override
     public void onStart() {
         super.onStart();
@@ -73,19 +87,32 @@ public class Login extends AppCompatActivity implements Button.OnClickListener {
         sendToMainPage(currentUser);
     }
 
+    /**
+     * Simply checks if the user is already logged in
+     * @param currentUser The user variable who should be logged in
+     */
+
     public void sendToMainPage(FirebaseUser currentUser) {
         if (currentUser != null) {
             goToMainPage(currentUser);
         }
     }
 
+    /**
+     * Sends to the main page the user. Finishes this activity. Sends as extra the current user
+     * @param currentUser The logged in user
+     */
     private void goToMainPage(FirebaseUser currentUser) {
         Intent intent = new Intent(this, MainActivity.class);
         intent.putExtra("CURRENT_USER", currentUser);
         startActivity(intent);
+        finish();
     }
 
-
+    /**
+     * ON button click checks what's been clicked
+     * @param v the button
+     */
     @Override
     public void onClick(View v) {
         int id = v.getId();
@@ -96,6 +123,13 @@ public class Login extends AppCompatActivity implements Button.OnClickListener {
         }
     }
 
+    /***
+     * If the sign in button is pressed, checks that the body inside the email is not empty.
+     * If so, it checks the data, otherwise it shows a
+     * Toast which will just tell the user to fill the fields
+     *
+     * TODO: To improve UX Highglight the empty fields in case they become so.
+     */
     public void signInButton() {
         if (!password_editText.getText().toString().isEmpty() && !email_editText.getText().toString().isEmpty()) {
             logUserIn(password_editText.getText().toString(), email_editText.getText().toString());
@@ -104,6 +138,9 @@ public class Login extends AppCompatActivity implements Button.OnClickListener {
         }
     }
 
+    /**
+     * If the user presses the button "Sign up" they will just go to sign up view
+     */
     private void goToSignup() {
         Intent signupIntent = new Intent(Login.this, Signup.class);
         startActivity(signupIntent);

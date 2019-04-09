@@ -3,12 +3,12 @@
   ~ All rights reserved. This code is intended to be used only by people who really want to save the planet. Hence, do not try to steal from anything. Feel free to add ideas, but I won't monitor that much GitHub. Peace and love guys.
   -->
 
-<vector xmlns:android="http://schemas.android.com/apk/res/android" xmlns:aapt="http://schemas.android.com/aapt"
-    android:viewportWidth="174"
-    android:viewportHeight="44"
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="174dp"
-    android:height="44dp">
+    android:height="44dp"
+    android:viewportWidth="174"
+    android:viewportHeight="44">
     <path
-        android:pathData="M22 0H152A22 22 0 0 1 174 22V22A22 22 0 0 1 152 44H22A22 22 0 0 1 0 22V22A22 22 0 0 1 22 0Z"
-        android:fillColor="@color/colorPrimaryDark" />
+        android:fillColor="@color/colorPrimaryDark"
+        android:pathData="M22 0H152A22 22 0 0 1 174 22V22A22 22 0 0 1 152 44H22A22 22 0 0 1 0 22V22A22 22 0 0 1 22 0Z" />
 </vector>

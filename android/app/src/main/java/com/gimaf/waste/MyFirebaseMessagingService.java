@@ -17,11 +17,11 @@ import com.google.firebase.messaging.RemoteMessage;
 
 import java.util.Map;
 
-import androidx.work.OneTimeWorkRequest;
-import androidx.work.WorkManager;
-
 import static com.gimaf.waste.Item.KEY_DB;
 
+/**
+ * Code borrowed entirely by Firebase Cloud Messaging demo. Customised only in the handling data
+ */
 
 public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
@@ -55,59 +55,52 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
         // Not getting messages here? See why this may be: https://goo.gl/39bRNJ
         Log.d(TAG, "From: " + remoteMessage.getFrom());
-
-        // Check if message contains a data payload.
-        /*if (remoteMessage.getData().size() > 0) {
-            Log.d(TAG, "Message data payload: " + remoteMessage.getData());
-
-          /*  if (/* Check if data needs to be processed by long running job */ /*true) {
-                // For long-running tasks (10 seconds or more) use WorkManager.
-                /*scheduleJob();
-           /* } else {
-                // Handle message within 10 seconds
-                handleNow();
-            }*/
-
-        /*}*/
-
         // Check if message contains a notification payload.
 
-
+        /**
+         * If there is any remote notification, the code will read the "NOTIFICATION_TYPE" data.
+         */
         if (remoteMessage.getNotification() != null || remoteMessage.getData().size() > 0) {
-
 
             Map<String, String> dataNotification = remoteMessage.getData();
             String productKey = dataNotification.get(KEY_DB);
             String body = remoteMessage.getNotification().getBody();
             String title = remoteMessage.getNotification().getTitle();
-            Class viewclass = this.getClass();
+            Class viewclass = this.getClass(); //Initailisation
             //Gets the notification type.
+            //TODO: Handle errors
             String message_type = dataNotification.get(NOTIFICATION_TYPE);
             switch (message_type) {
+                //IF it's a problem with temperature
                 case "TMP_ISSUE":
                     viewclass = ItemView.class;
                     break;
-                    //If it is a new product, it will send to the "Set New Product" view.
+                //If it is a new product, it will send to the "Set New Product" view.
                 case "NEW_PRODUCT":
                     viewclass = SetNewProduct.class;
                     break;
+                    // If the product is finished
                 case "PRODUCT_FINISHED":
-                        viewclass = ItemView.class;
+                    viewclass = ItemView.class;
                     break;
+                    // If the product is finishing
                 case "PRODUCT_FINISHING":
                     viewclass = ItemView.class;
                     break;
+                    // if the product is expiring
                 case "PRODUCT_EXPIRING":
                     viewclass = ItemView.class;
                     break;
+                    // if the product is expired
                 case "PRODUCT_EXPIRED":
                     viewclass = ItemView.class;
                     break;
+                    // default it will send to a Set New PRoduct interface
                 default:
                     viewclass = SetNewProduct.class;
                     break;
             }
-
+            // Creates the notification
             sendNotification(viewclass, body, title, productKey);
 
 
@@ -138,23 +131,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
     }
     // [END on_new_token]
 
-    /**
-     * Schedule async work using WorkManager.
-     */
-    private void scheduleJob() {
-        // [START dispatch_job]
-        OneTimeWorkRequest work = new OneTimeWorkRequest.Builder(MyWorker.class)
-                .build();
-        WorkManager.getInstance().beginWith(work).enqueue();
-        // [END dispatch_job]
-    }
 
-    /**
-     * Handle time allotted to BroadcastReceivers.
-     */
-    private void handleNow() {
-        Log.d(TAG, "Short lived task is done.");
-    }
 
     /**
      * Persist token to third-party servers.

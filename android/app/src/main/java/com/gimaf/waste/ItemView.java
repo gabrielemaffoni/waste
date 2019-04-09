@@ -19,6 +19,12 @@ import com.google.firebase.database.ValueEventListener;
 
 import static com.gimaf.waste.Item.KEY_DB;
 
+/**
+ * On opening, this view shows the data saved in the database in real time.
+ * It also updates the animation
+ *
+ * TODO: Convert from Pints to Milliliters
+ */
 public class ItemView extends AppCompatActivity {
     private DatabaseReference databaseReference;
     private TextView brand_text;
@@ -45,7 +51,6 @@ public class ItemView extends AppCompatActivity {
         brand_text = findViewById(R.id.brand_text);
         product_type = findViewById(R.id.type_and_total_quantity);
         quantity_left = findViewById(R.id.quantity_left_value);
-        //brand_field = findViewById(R.id.brand);
         int_temperature = findViewById(R.id.int_temperature_value);
         ext_temperature = findViewById(R.id.ext_temperature_value);
         expiration_date = findViewById(R.id.expiration_date_text);
@@ -93,6 +98,12 @@ public class ItemView extends AppCompatActivity {
             }
         });
     }
+
+    /**
+     * Calculates which animation is required.
+     * @param totalQuantity The size of the packaging
+     * @param currentQuantity The quantity left
+     */
 
     private void calculateAnimation(double totalQuantity, double currentQuantity) {
         double calculation = currentQuantity / totalQuantity;

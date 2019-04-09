@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!--
+<?xml version="1.0" encoding="utf-8"?><!--
   ~ Copyright (c) 2019. Gabriele Maffoni.
   ~ All rights reserved. This code is intended to be used only by people who really want to save the planet. Hence, do not try to steal from anything. Feel free to add ideas, but I won't monitor that much GitHub. Peace and love guys.
   -->
@@ -10,5 +9,7 @@
     <color name="colorAccent">#3BB54A</color>
     <color name="colorBlack">#000</color>
     <color name="red_error">#B23B4D</color>
-    <color name="mtrl_textinput_default_box_stroke_color" tools:override="true">@color/colorPrimaryDark</color>
+    <color name="mtrl_textinput_default_box_stroke_color" tools:override="true">
+        @color/colorPrimaryDark
+    </color>
 </resources>

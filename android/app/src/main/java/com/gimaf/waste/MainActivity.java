@@ -45,6 +45,10 @@ import static com.gimaf.waste.Item.PRODUCT_TYPE_DB;
 import static com.gimaf.waste.Item.QUANTITY_DB;
 import static com.gimaf.waste.Item.QUANTITY_LEFT_DB;
 
+/**
+ * This activity will show the list of monitored products. It uses FirebaseRecyclerAdapter which should be faster for a prototype.
+ *
+ */
 
 public class MainActivity extends AppCompatActivity {
     private DatabaseReference database;
@@ -58,7 +62,11 @@ public class MainActivity extends AppCompatActivity {
     private FirebaseAuth auth;
     private BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
             = new BottomNavigationView.OnNavigationItemSelectedListener() {
-
+        /**
+         * This is the method required to make the nav bar items work
+         * @param item The single item in the navbar
+         * @return false
+         */
         @Override
         public boolean onNavigationItemSelected(@NonNull MenuItem item) {
             switch (item.getItemId()) {
@@ -69,6 +77,9 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
+    /**
+     * The activity will start checking for data updates
+     */
     @Override
     protected void onStart() {
         super.onStart();
@@ -81,13 +92,15 @@ public class MainActivity extends AppCompatActivity {
         recyclerAdapter.stopListening();
     }
 
-
-
+    /**
+     * On creating the activity, the code will check if there is new data on the database.
+     * Meanwhile, it will create also on the top right of the navbar a menu item in which "Log out" button is available.
+     * @param savedInstanceState Bundle
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        Intent extras = getIntent();
         auth = FirebaseAuth.getInstance();
         currentUser = auth.getCurrentUser();
         BottomNavigationView navigation = findViewById(R.id.navigation);
@@ -95,24 +108,25 @@ public class MainActivity extends AppCompatActivity {
         bar = findViewById(R.id.bar);
         setSupportActionBar(bar);
 
+        //Inflates the menu
         bar.inflateMenu(R.menu.right_bar);
 
-
+        // Sets the list
         recyclerView = findViewById(R.id.products_list);
         update_button = findViewById(R.id.item_updated_button);
         update_message = findViewById(R.id.message_updated);
         navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
-
+        //Creates the layout of the list
         createLayoutManager();
 
 
     }
 
+
     @Override
     protected void onPostResume() {
         super.onPostResume();
         Log.d("GABRIELE", "On post resume");
-
         listenToChanged();
     }
 
@@ -121,18 +135,22 @@ public class MainActivity extends AppCompatActivity {
         super.onPostCreate(savedInstanceState);
         Log.d("GABRIELE", "On post create");
         get_token();
-
         listenToChanged();
     }
 
+    /**
+     * Gets the token of the device and uploads it on the database.
+     * It is required to send notifications from Firebase Cloud Messaging.
+     */
     public void get_token() {
-        Log.d("GABRIELE", "Getting token");
+        Log.d("TOKEN", "Getting token");
+        //Firebase builtin method
         FirebaseInstanceId.getInstance().getInstanceId()
                 .addOnCompleteListener(new OnCompleteListener<InstanceIdResult>() {
                     @Override
                     public void onComplete(@NonNull Task<InstanceIdResult> task) {
                         if (!task.isSuccessful()) {
-                            Log.w("Hello TAG", "getInstanceId failed", task.getException());
+                            Log.w("TOKEN", "getInstanceId failed", task.getException());
                             return;
                         }
                         String token = "";
@@ -140,15 +158,17 @@ public class MainActivity extends AppCompatActivity {
                             // Get new Instance ID token
                             token = task.getResult().getToken();
                         } catch (NullPointerException exception) {
+                            // If there is any null pointer exception it will show it as a toast.
                             Toast.makeText(getApplicationContext(), exception.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
                         }
+                        //If everything goes right, it will upload on the database the token using saveToken(Map) method.
                         Map<String, Object> toUpload = new ArrayMap<>();
                         toUpload.put("token", token);
                         saveToken(toUpload);
 
                     }
 
-
+                    //If there is a new token, it will be uploaded
                     public void onNewToken(String token) {
                         Log.d("Tokens!", "Refreshed token: " + token);
 
@@ -162,13 +182,20 @@ public class MainActivity extends AppCompatActivity {
                 });
     }
 
-
+    /**
+     * Uploads the token on firebase under "users"-
+     * @param token A map that contains "token": the token to upload
+     */
+    //Saves the token on firebase
     public void saveToken(Map<String, Object> token) {
-        //UPload to firebase
+        //Upload on Firebase
         database = FirebaseDatabase.getInstance().getReference();
         database.child("users").child(currentUser.getUid()).updateChildren(token);
     }
 
+    /**
+     * Required for the recyclerview
+     */
     private void createLayoutManager() {
         Log.d("GABRIELE", "Creating layout manager");
         layoutManager = new LinearLayoutManager(this.getApplicationContext());
@@ -176,6 +203,10 @@ public class MainActivity extends AppCompatActivity {
         fetch();
     }
 
+    /**
+     * The code simply queries the Database and asks it if there is a new Item there. If so it will display a card for each item
+     * TODO: Empty screen
+     */
     private void fetch() {
         Log.d("GABRIELE", "Fetching");
         String uid = currentUser.getUid();
@@ -192,24 +223,23 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public Item parseSnapshot(@NonNull DataSnapshot snapshot) {
                 Item newItem = new Item();
-                                Log.d("GABRIELE", "Found item. Creating item");
-                                try {
-                                    newItem.stringToDouble(QUANTITY_DB, snapshot.child(QUANTITY_DB).getValue().toString());
-                                    newItem.stringToDouble(QUANTITY_LEFT_DB, snapshot.child(QUANTITY_LEFT_DB).getValue().toString());
-                                    newItem.setProduct_type(snapshot.child(PRODUCT_TYPE_DB).getValue().toString());
-                                    newItem.setExpiration_date(snapshot.child(EXPIRATION_DATE_DB).getValue().toString());
-                                    newItem.setMeasure(snapshot.child(MEASURE_DB).getValue().toString());
-                                    newItem.setItem_key(snapshot.getKey());
-                                } catch (NullPointerException exception) {
-                                    Log.d("Item list empty!", exception.getLocalizedMessage());
-                                }
+                Log.d("Fetch", "Found item. Creating item");
+                try {
+                    // Assigns to the new item the right amount of data
+                    newItem.stringToDouble(QUANTITY_DB, snapshot.child(QUANTITY_DB).getValue().toString());
+                    newItem.stringToDouble(QUANTITY_LEFT_DB, snapshot.child(QUANTITY_LEFT_DB).getValue().toString());
+                    newItem.setProduct_type(snapshot.child(PRODUCT_TYPE_DB).getValue().toString());
+                    newItem.setExpiration_date(snapshot.child(EXPIRATION_DATE_DB).getValue().toString());
+                    newItem.setMeasure(snapshot.child(MEASURE_DB).getValue().toString());
+                    newItem.setItem_key(snapshot.getKey());
+                } catch (NullPointerException exception) {
+                    Log.d("Item list empty!", exception.getLocalizedMessage());
+                }
                 return newItem;
             }
         }).build();
 
-
-
-
+        // Adds the data to the recyclerview using custom ViewHolder class.
         recyclerAdapter = new FirebaseRecyclerAdapter<Item, ViewHolder>(options) {
             @Override
             public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
@@ -220,6 +250,12 @@ public class MainActivity extends AppCompatActivity {
                 return new ViewHolder(view);
             }
 
+            /**
+             * This class will check whether a single item is clicked. If so, it will send to the detailed view page which will show the items detail
+             * @param holder the Viewholder
+             * @param position The position of the clicked item
+             * @param single_item The single item on which we will save the data
+             */
 
             @Override
             protected void onBindViewHolder(@NonNull ViewHolder holder, final int position, @NonNull final Item single_item) {
@@ -229,6 +265,7 @@ public class MainActivity extends AppCompatActivity {
                 holder.wrapper.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
+                        //If the item is clicked it will send also the item key, which will be useful to gather data from the database
                         Intent intent = new Intent(view.getContext(), ItemView.class);
                         intent.putExtra(KEY_DB, single_item.getItem_key());
                         Log.d("EXTRA", intent.getExtras().getString(KEY_DB));
@@ -237,11 +274,14 @@ public class MainActivity extends AppCompatActivity {
                 });
             }
 
-
         };
+        //Shows the list
         recyclerView.setAdapter(recyclerAdapter);
     }
 
+    /**
+     * If there is a new item, the view will show the button.
+     */
     private void listenToChanged() {
         database = FirebaseDatabase.getInstance().getReference();
         String uid = currentUser.getUid();
@@ -254,7 +294,9 @@ public class MainActivity extends AppCompatActivity {
                     if (dataSnapshot.child("new_product").getValue().equals("yes")) {
                         update_button.setVisibility(View.VISIBLE);
                         update_message.setVisibility(View.VISIBLE);
-
+                        /**
+                         * If the button is clicked, the view will change to "SetNewProduct".
+                         */
                         update_button.setOnClickListener(new View.OnClickListener() {
                             @Override
                             public void onClick(View v) {
@@ -262,7 +304,7 @@ public class MainActivity extends AppCompatActivity {
                                 update_button.setVisibility(View.GONE);
                                 update_message.setVisibility(View.GONE);
                                 Intent intent = new Intent(getApplicationContext(), SetNewProduct.class);
-                                intent.putExtra(KEY_DB, product_key);
+                                intent.putExtra(KEY_DB, product_key); // The key will be useful later on to save the data on the database
                                 startActivity(intent);
                             }
                         });
@@ -270,6 +312,7 @@ public class MainActivity extends AppCompatActivity {
                     }
                 } else if (!dataSnapshot.hasChildren()) {
                     //Do nothing
+                    Log.d("Listen to changed", "No items");
                 }
 
             }
@@ -295,6 +338,11 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    /**
+     * Inflates the menu on the right top angle
+     * @param menu the menu to be inflated
+     * @return
+     */
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
@@ -302,13 +350,16 @@ public class MainActivity extends AppCompatActivity {
         return true;
     }
 
-
+    /**
+     * In case people tap on "Logout" it will log out from the main user
+     * @param item
+     * @return
+     */
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.logout_bar:
                 logout();
-
                 break;
         }
 
@@ -328,6 +379,9 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    /**
+     * Logs out the user and goes back to Login page
+     */
     public void logout() {
         Intent logIn = new Intent(MainActivity.this, Login.class);
         FirebaseAuth.getInstance().signOut();

@@ -40,9 +40,6 @@ DOOR_CLOSED = "door_closed"
 QUANTITY_CHECK = "quantity"
 RESET_BUTTON = "Reset mode"
 LIGHT_ISSUE = "Light issue"
-NO_ALARM = "No alarm"
-EMERGENCY_MODE = "light_emergency"
-EMERGENCY_MODE_OFF = "light_emergency_off"
 EXPIRATION_DAYS = "expiration_days"
 
 

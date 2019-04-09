@@ -6,6 +6,10 @@ import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+/**
+ * This simple viewHolder class will get all the data and find them in the view of the single card
+ * Ready to be inglated
+ */
 
 public class ViewHolder extends RecyclerView.ViewHolder {
     public LinearLayout right;
