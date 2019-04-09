@@ -192,6 +192,8 @@ Allows the data to be copied in the tmp_item.
 """
 
 # TODO: add a method that converts quantity from arduino to normal quantity.
+
+
 def copy_data(data_to_copy):
     print("Copying data")
     for s_line in data_to_copy:
@@ -369,6 +371,7 @@ def emergency_mode():
             light_counter = 0
             light_issue = False
             break
+
 
 """
 Asks the expiration date to the Database and sends the number of days left to arduino.
