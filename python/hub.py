@@ -43,6 +43,7 @@ LIGHT_ISSUE = "Light issue"
 NO_ALARM = "No alarm"
 EMERGENCY_MODE = "light_emergency"
 EMERGENCY_MODE_OFF = "light_emergency_off"
+EXPIRATION_DAYS = "expiration_days"
 
 
 """
@@ -387,6 +388,8 @@ def set_expiration_date():
     difference = (exp_date - datetime.datetime.now()).days
     # Storing the expiration date in our general item object
     tmp_item.expiration_date = exp_date
+    # Sends the difference to the database
+    database.child('items').child(user_id).child(tmp_item.key).child(EXPIRATION_DAYS).set(difference)
     # We are telling to the arduino that the next data we're sending is going to be the expiration days
     send_request('expiration')
     # Wait for 10 seconds to avoid problems
@@ -403,6 +406,7 @@ if __name__ == '__main__':
     # Gets the general line
     global line
     # Initialising all the variables
+    expiration_date_check = datetime.datetime.now()
     light_issue = False
     light_counter = 0
     first_setup = False
@@ -496,3 +500,8 @@ if __name__ == '__main__':
                 update_item()
                 new_check_time = set_check_time()
                 time.sleep(5)
+
+            # Everyday it will update the database and arduino.
+            if expiration_date_check.day == datetime.datetime.now():
+                set_expiration_date()
+                expiration_date_check = datetime.datetime.now() + datetime.timedelta(days=1)
