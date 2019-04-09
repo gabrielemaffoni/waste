@@ -1,17 +1,46 @@
+/*
+ * Copyright (c) 2019. Gabriele Maffoni.
+ *
+ * This code has several functions.
+ * - It sends a temperature alarm
+ * - Monitors the quantity, if there is a lack of something it sends a notification alert
+ * - Sends a new notifiction product if needed
+ * - Sends a notification that the product is expiring.
+ *
+ * CHANGELOG:
+ * - Added comments
+ * - Polished from unused variables
+ * - Added constants
+ */
+
+/**
+ * The database consists in two different fields so far.
+ * 1) 'items'
+ * 2) 'tokens'
+ *
+ * Each one has inside another container, confined by user IDs.
+ * Checkout the rest of the database doc on github
+ */
+
+//CONSTANTS USED IN THE DATABASE
 const opt_temperature = 'opt_temperature';
 const int_temperature = 'int_temperature';
 const ext_temperature = 'ext_temperature';
-
+const quantity_mm = 'quantity_mm';
+const quantity_left = 'quantity_left';
+const product_type = 'product_type';
+const expiration_days = 'expiration_days';
+//Database initialisation
 const functions = require('firebase-functions');
 const admin = require('firebase-admin');
 admin.initializeApp();
 var message;
 
-exports.get_user_token = functions.database.ref('/users/{userID}/token').onWrite(change =>{
-    let user_token = change.after.val();
-    return user_token;
-});
-
+/**
+ * This method gets the temperature of the product and compares it against the optimal temperature.
+ * If it is more than it, it will just send a notification to the user.
+ * @type {CloudFunction<Change<DataSnapshot>>}
+ */
 exports.temperature_alarm = functions.database.ref('/items/{userID}/{itemID}/').onUpdate((change, context)=>{
   console.log("Checking value");
   const data = change.after.val();
@@ -25,37 +54,65 @@ exports.temperature_alarm = functions.database.ref('/items/{userID}/{itemID}/').
 
   if (internal_temperature > optimal_temperature){
     message = "TMP_ISSUE";
+    const payload = {
+      "notification": {
+        "title": 'Your product is raising temperature!',
+        "body": 'Consider putting it back in your pantry.',
+      },
+      "data": {
+        "item_key": change.after.key,
+        "intent_notification": message
+      }
+    };
+
+    const token_snapshot = admin.database().ref(`/users/${user_id}/token/`).once('value').then((data_snapshot) => {
+      console.log("Sending message", payload);
+      return admin.messaging().sendToDevice(data_snapshot.val(), payload);
+    }, (error) => {
+      console.log(error);
+    });
+
 
   } else {
     message = "TMP_OKAY";
+    const payload = {
+      "notification": {
+        "title": 'Your product is now okay!',
+        "body": 'Everything seems back to normal :)',
+      },
+      "data": {
+        "item_key": change.after.key,
+        "intent_notification": message
+      }
+    };
+    const token_snapshot = admin.database().ref(`/users/${user_id}/token/`).once('value').then((data_snapshot) => {
+      console.log("Sending message", payload);
+      return admin.messaging().sendToDevice(data_snapshot.val(), payload);
+    }, (error) => {
+      console.log(error);
+    });
+
   }
-  const payload = {
-    "notification": {
-      "title": 'Your product is raising temperature!',
-      "body": 'Consider putting it back in your pantry.',
-    },
-    "data": {
-      "item_key": change.after.key,
-      "intent_notification": message
-    }
-  };
-  const token_snapshot = admin.database().ref(`/users/${user_id}/token/`).once('value').then((data_snapshot) => {
-    console.log("Sending message", payload);
-    return admin.messaging().sendToDevice(data_snapshot.val(), payload);
-  }, (error) => {
-    console.log(error);
-  });
 
   return message;
 });
+
+
+/**
+ * It checks the quantity against other data. If it is lower than a quarter of the total data,
+ * it will send a notification saying that the product is finishing.
+ * Otherwise, it will just send a notification that it is finished.
+ * @type {CloudFunction<Change<DataSnapshot>>}
+ */
+
 
 exports.monitor_quantity = functions.database.ref('items/{userID}/{itemID}/current_quantity').onUpdate((snapshot, context)=>{
   console.log("Checking quantity");
   const quantity_atm = snapshot.after.val();
   const product_id = context.params.itemID;
   const user_id = context.params.userID;
-  const product_type = admin.database().ref(`items/${user_id}/${product_id}/product_type`).once('value').then((d_snapshot) => {return d_snapshot.val()}, (error) => {console.log(error)});
-  const total_quantity = admin.database().ref(`items/${user_id}/${product_id}/total_quantity`).once('value').then((quantity_snap)=>{
+  const product_type_db = admin.database().ref(`items/${user_id}/${product_id}/${product_type}`).once('value').then((d_snapshot) => {return d_snapshot.val()}, (error) => {console.log(error)});
+  const total_quantity_db = admin.database().ref(`items/${user_id}/${product_id}/total_quantity`).once('value').then((quantity_snap)=>{
     return quantity_snap.val();
   }, (error) => {console.log(error)});
   const token = admin.database().ref(`users/${user_id}/token`).once('value').then((token_snap) => {
@@ -64,12 +121,12 @@ exports.monitor_quantity = functions.database.ref('items/{userID}/{itemID}/curre
     console.log(error)
   });
   console.log("Token", token);
-  console.log("Total quantity", total_quantity);
+  console.log("Total quantity", total_quantity_db);
   var payload = "";
-  if (quantity_atm < (total_quantity/4) && quantity_atm > 0){
+  if (quantity_atm < (total_quantity_db/4) && quantity_atm > 0){
     payload = {
       "notification": {
-      "title" : `Your ${product_type} is almost finishing!`,
+      "title" : `Your ${product_type_db} is almost finishing!`,
       "body"  : `Do you have it in your pantry?`
     },
     "data":{
@@ -79,7 +136,7 @@ exports.monitor_quantity = functions.database.ref('items/{userID}/{itemID}/curre
   }
   } else if (quantity_atm === 0){
     payload = {"notification":{
-      "title": `Your ${product_type} is finished!`,
+      "title": `Your ${product_type_db} is finished!`,
       "body": `Should I add it to the list?`
     },
   "data":{
@@ -91,6 +148,13 @@ exports.monitor_quantity = functions.database.ref('items/{userID}/{itemID}/curre
 
   return admin.messaging().sendToDevice(token.toString(), payload);
 });
+
+/**
+ * Sets the optimal temperature based on arbitrary data and common knowledge.
+ * Next task: put it real confirmed data in a part of the database from where people can also edit.
+ * @type {CloudFunction<Change<DataSnapshot>>}
+ */
+
 
 exports.define_optimal_temperature = functions.database.ref('/items/{userID}/{itemID}/').onUpdate((data_snapshot,context) => {
   console.log("Checking type of product");
@@ -128,6 +192,12 @@ exports.define_optimal_temperature = functions.database.ref('/items/{userID}/{it
   }
 });
 
+/**
+ * Sends a notification to the user saying that the cap has been reset and to place it back to the pantry.
+ * @type {CloudFunction<DataSnapshot>}
+ */
+
+
 exports.send_new_product_notification = functions.database.ref('/items/{userID}/{itemID}').onCreate((snapshot, context) => {
   const u_token = "token";
   const product_key = snapshot.key;
@@ -157,11 +227,18 @@ exports.send_new_product_notification = functions.database.ref('/items/{userID}/
 
 });
 
+/**
+ * Sends a notification to the user saying that a product is expiring or expired.
+ * @type {CloudFunction<Change<DataSnapshot>>}
+ */
+
+
+
 exports.product_expiring_notification = functions.database.ref('items/{userID}/{itemID}/').onUpdate((snapshot, context) =>{
-  const expiration_days = snapshot.after.child('expiration_days').val();
+  const expiration_days_db = snapshot.after.child(expiration_days).val();
   const user_id = context.params.userID;
   const product_key = context.params.itemID;
-  if (expiration_days === 0){
+  if (expiration_days_db === 0){
     const token_snapshot = admin.database().ref(`/users/${user_id}/token/`).once('value').then((data_snapshot) => {
       const payload = {
         "notification": {
@@ -179,11 +256,11 @@ exports.product_expiring_notification = functions.database.ref('items/{userID}/{
       console.log(error);
     });
   }
-  else if (expiration_days < 4){
+  else if (expiration_days_db < 4){
     const token_snapshot = admin.database().ref(`/users/${user_id}/token/`).once('value').then((data_snapshot) => {
       const payload = {
         "notification": {
-          "title": `Your product is expiring in ${expiration_days} days!`,
+          "title": `Your product is expiring in ${expiration_days_db} days!`,
           "body": 'Finish it quickly, before you have to throw it away. Do you need some ideas?',
         },
         "data": {
@@ -197,5 +274,5 @@ exports.product_expiring_notification = functions.database.ref('items/{userID}/{
       console.log(error);
     });
   }
-  return expiration_days
+  return expiration_days_db
 });

@@ -1,4 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Copyright (c) 2019. Gabriele Maffoni.
+  ~ All rights reserved. This code is intended to be used only by people who really want to save the planet. Hence, do not try to steal from anything. Feel free to add ideas, but I won't monitor that much GitHub. Peace and love guys.
+  -->
+
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     package="com.gimaf.waste">
