@@ -291,7 +291,7 @@ exports.convert_from_mm_to_ml = functions.database.ref('items/{userID}/{itemID}'
       id: context.params.itemID,
       quantity_mm_db: snapshot.after.child(quantity_mm).val(),
       quantity_converted: 0,
-      total_quantity: snapshot.after.child(total_quantity_db).val(),
+      total_quantity: snapshot.after.child('total_quantity').val(),
       ml_per_mm: 0
   };
   console.log(item);
@@ -299,7 +299,9 @@ exports.convert_from_mm_to_ml = functions.database.ref('items/{userID}/{itemID}'
   /**
    * 568 -> Milk bottle of 1 pint. | the threshold of most of the bottles here is 75 mm after that there is a new proportion
    * to do.
+   * Empty 143
    * 1136 -> Milk bottle of 2 pints | The threshold is 125. After that most of the milk comes out.
+   * empty 255
    */
   console.log('item_size', item.total_quantity);
   console.log('ietm quantity', item.quantity_mm_db);
@@ -319,7 +321,12 @@ exports.convert_from_mm_to_ml = functions.database.ref('items/{userID}/{itemID}'
         }
     }
     // Does the final math
-    item.quantity_converted = item.ml_per_mm * item.quantity_mm_db;
+  /**
+   * To get what is remaining now it's kind of easy. We get the proportion of ml/mm calculated earlier,
+   * and then we subtract the total quantity minus the lack of product
+   */
+    const quantity_to_multiply = item.ml_per_mm * item.quantity_mm_db;
+    item.quantity_converted = item.total_quantity - quantity_to_multiply;
     console.log('Ml per mm', item.ml_per_mm);
     let data_to_upload = {'quantity_left': item.quantity_converted};
     console.log("data to upload", data_to_upload);
