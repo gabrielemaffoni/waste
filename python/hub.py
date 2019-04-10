@@ -83,10 +83,6 @@ global first_setup  # Boolean
 This method allows the user to log in to the database. It is important because otherwise nothing else works.
 It will ask users their email and password and it will store the userID inside the global variable,
 which will be used to access the items later on.
-To have a better overview on how the system works, check the right section on github.
-
-I still need to place the code to handle errors.
-So, so far it will just crash the program if you mistakenly write the wrong email or password.
 
 IMPORTANT: MAKE SURE IT IS THE SAME ACCOUNT OF YOUR APP. If it is not, you won't see much.
 """
@@ -135,8 +131,7 @@ def send_request(message):
 
 
 """
-At the beginning the Arduino is gonna do a lot of fuss about starting up.
-This method allows the raspberry to start reading when it reads 'SETUP DONE' on the serial monitor. 
+Allows the raspberry to start reading when it reads 'SETUP DONE' on the serial monitor. 
 
 @:except any error coming from the serial monitor
 """
@@ -165,10 +160,9 @@ def read_all_startup_lines():
 
 
 """
-This method will update the data on an existent Item in the database. Notice the difference between the previous and the other method.
-One uses ".set()" method. This one uses ".update()" which doesn't overwrite ALL the data but just the ones on the lines.
+This method will update the data on an existent Item in the database.
+It uses ".update()" which doesn't overwrite ALL the data but just the ones on the lines.
 """
-
 
 def update_item():
     database.child('items').child(user_id).child(tmp_item.key).update(tmp_item.data_to_update())
@@ -179,8 +173,6 @@ Allows the data to be copied in the tmp_item.
 
 @:parameter a map of data which is returned by read_data()  method.
 """
-
-# TODO: add a method that converts quantity from arduino to normal quantity.
 
 
 def copy_data(data_to_copy):
@@ -307,10 +299,11 @@ def read_data():
     if serialPort.inWaiting() > 0:  # If there is any new string in the serial. this check is important,
         # otherwise the code will just stay stuck.
         line = ""
+        # Skips all the lines which are old and not the beginning of the JSON
         while "{" not in line:
             line = serialPort.readline().decode()  # .decode() is essential to decode from byte type.
             print("Line is: %s" % line)
-            # If at the beginning we don't get the start of JSON, we then don't read anything else anymore
+            # If we restart the data we just break the code
             if "RESET_MODE" in line:
                 first_setup = True
                 light_issue = False
@@ -319,6 +312,9 @@ def read_data():
             if "LIGHT_OFF" in line:
                 light_issue = False
                 break
+            else:
+                print(line)
+                print("No {")
             # If there is ANY other message
         # If the line has a new starting point we will start reading as JSON.
         if "{" in line:
@@ -363,18 +359,6 @@ def read_data():
                     data_for_item = new_line.strip('\r\n')
                     data_reading.append(data_for_item)
 
-        # If at the beginning we don't get the start of JSON, we then don't read anything else anymore
-        if "RESET_MODE" in line:
-            first_setup = True
-            light_issue = False
-
-        # Same here
-        if "LIGHT_OFF" in line:
-            light_issue = False
-        # If there is ANY other message
-        else:
-            print(line)
-            print("No {")
     # IF in general there is no serial available, handle it by writing that the Serial Monitor is not ready.
     else:
         print("Serial not ready")
@@ -515,11 +499,11 @@ if __name__ == '__main__':
                     set_total_quantity()
                     print('Ended first setup!')
 
-            # if the light counter isn't 5 or more, we just wait for 3 seconds
-            if 0 < light_counter < 5:
+            # if the light counter isn't 7 or more, we just wait for 3 seconds
+            if 0 < light_counter < 7:
                 time.sleep(3)
             # If instead we see that the light is still on, we will run in "emergency mode"
-            elif light_counter >= 5:
+            elif light_counter >= 7:
                 light_issue = True
                 emergency_mode()
                 light_counter = 0  # Reset again the light counter
