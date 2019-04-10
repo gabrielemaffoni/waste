@@ -60,6 +60,11 @@ public class ItemView extends AppCompatActivity {
 
     }
 
+    /**
+     * Attach values to the interface from the data snapshot.
+     * @param dataSnapshot The queried snapshot frm the database
+     * @param productKey unused, it's the product key.
+     */
     private void attachValues(@NonNull DataSnapshot dataSnapshot, String productKey) {
         Item item = new Item();
         item.setFromDataSnapshot(dataSnapshot, getApplicationContext());
@@ -87,7 +92,10 @@ public class ItemView extends AppCompatActivity {
         calculateAnimation(item.getTotal_quantity(), item.getCurrent_quantity());
     }
 
-
+    /***
+     * Gets the data from the Database and attaches them on the view
+     * @param productKey
+     */
     private void setValues(final String productKey) {
         databaseReference = FirebaseDatabase.getInstance().getReference().child("items").child(currentUser.getUid()).child(productKey);
         Log.d("Reference", databaseReference.getPath().toString());
