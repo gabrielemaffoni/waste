@@ -1,9 +1,9 @@
 # Waste - An Open Source Arduino based food monitor
 
 ### What's in the page?
-• [What's all about](https://github.com/gabrielemaffoni/waste#whats-all-about)
-• [Requirements](https://github.com/gabrielemaffoni/waste#what-are-the-requirements)
-• [FAQ and graphic assets](https://github.com/gabrielemaffoni/waste#faq)
+* [What's all about](https://github.com/gabrielemaffoni/waste#whats-all-about)
+* [Requirements](https://github.com/gabrielemaffoni/waste#what-are-the-requirements)
+* [FAQ and graphic assets](https://github.com/gabrielemaffoni/waste#faq)
 
 ## What's all about?
 Waste is a project I worked on for my honours. It is a smart cap that answers the question people with busy lives always ask themselves at the supermarket: "How much milk do I still have?".
@@ -24,7 +24,7 @@ Waste is a project I worked on for my honours. It is a smart cap that answers th
 ### Database
 I've used Firebase here, because I was familiar with it and it was easy to work with. I would suggest you to do the same, especially if you don't want the hassle of creating your own database.
 
-### Push notificatin
+### Push notification
 Still Firebase, I'm using firebase functions
 
 # FAQ
