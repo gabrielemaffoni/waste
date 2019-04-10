@@ -4,6 +4,7 @@
 * [What's all about](https://github.com/gabrielemaffoni/waste#whats-all-about)
 * [Requirements](https://github.com/gabrielemaffoni/waste#what-are-the-requirements)
 * [FAQ and graphic assets](https://github.com/gabrielemaffoni/waste#faq)
+* Looking for the [Wiki](https://github.com/gabrielemaffoni/waste/wiki)?
 
 ## What's all about?
 Waste is a project I worked on for my honours. It is a smart cap that answers the question people with busy lives always ask themselves at the supermarket: "How much milk do I still have?".
