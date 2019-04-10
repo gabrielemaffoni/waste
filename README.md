@@ -26,4 +26,5 @@ Still Firebase, I'm using firebase functions
 ## Why is this code so messy?
 I am a rookie developer. My profession is UX designer, developing is just a hobby for me. Hence, it is messy and I'll try to clean it up. But if you want to contribute, feel free to do it!
 
-
+## Is ther any documentation?
+YES! go in the wiki and you will find it ;)
