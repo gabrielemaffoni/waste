@@ -245,23 +245,26 @@ public class MainActivity extends AppCompatActivity {
             public Item parseSnapshot(@NonNull DataSnapshot snapshot) {
                 Item newItem = new Item();
                 Log.d("Fetch", "Found item. Creating item");
-                try {
-                    // Assigns to the new item the right amount of data
-                    newItem.setMeasure(snapshot.child(MEASURE_DB).getValue().toString());
-                    newItem.stringToDouble(QUANTITY_DB, snapshot.child(QUANTITY_DB).getValue().toString());
-                    Double total_quantity_converted = convert_value_by_measure(newItem.getMeasure(), newItem.getTotal_quantity());
-                    newItem.setTotal_quantity(total_quantity_converted);
-                    newItem.setProduct_type(snapshot.child(PRODUCT_TYPE_DB).getValue().toString());
-                    newItem.setExpiration_date(snapshot.child(EXPIRATION_DATE_DB).getValue().toString());
-                    newItem.stringToDouble(QUANTITY_LEFT_DB, snapshot.child(QUANTITY_LEFT_DB).getValue().toString());
-                    Double quantity_converted = convert_value_by_measure(newItem.getMeasure(), newItem.getCurrent_quantity());
-                    newItem.setCurrent_quantity(quantity_converted);
-                    newItem.setExpiration_days(Integer.parseInt(snapshot.child(EXPIRATION_DAYS_DB).getValue().toString()));
-                    newItem.setItem_key(snapshot.getKey());
-                } catch (NullPointerException exception) {
-                    Log.d("Item list empty!", exception.getLocalizedMessage());
+                if (!snapshot.child("new_product").getValue().toString().equals("yes")) {
+                    try {
+                        // Assigns to the new item the right amount of data
+                        newItem.setMeasure(snapshot.child(MEASURE_DB).getValue().toString());
+                        newItem.stringToDouble(QUANTITY_DB, snapshot.child(QUANTITY_DB).getValue().toString());
+                        Double total_quantity_converted = convert_value_by_measure(newItem.getMeasure(), newItem.getTotal_quantity());
+                        newItem.setTotal_quantity(total_quantity_converted);
+                        newItem.setProduct_type(snapshot.child(PRODUCT_TYPE_DB).getValue().toString());
+                        newItem.setExpiration_date(snapshot.child(EXPIRATION_DATE_DB).getValue().toString());
+                        newItem.stringToDouble(QUANTITY_LEFT_DB, snapshot.child(QUANTITY_LEFT_DB).getValue().toString());
+                        Double quantity_converted = convert_value_by_measure(newItem.getMeasure(), newItem.getCurrent_quantity());
+                        newItem.setCurrent_quantity(quantity_converted);
+                        newItem.setExpiration_days(Integer.parseInt(snapshot.child(EXPIRATION_DAYS_DB).getValue().toString()));
+                        newItem.setItem_key(snapshot.getKey());
+                    } catch (NullPointerException exception) {
+                        Log.d("Item list empty!", exception.getLocalizedMessage());
+                    }
                 }
-                return newItem;
+                    return newItem;
+
             }
         }).build();
 
@@ -285,18 +288,19 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             protected void onBindViewHolder(@NonNull ViewHolder holder, final int position, @NonNull final Item single_item) {
+            if (single_item.getCurrent_quantity() != null) {
                 holder.setType_and_quantity(single_item.getProduct_type() + " " + single_item.getTotal_quantity() + " " + single_item.getMeasure());
                 holder.setQuantity_left(String.format(getResources().getString(R.string.double_format), single_item.getCurrent_quantity()));
-                if (single_item.getCurrent_quantity() <= 0){
+                if (single_item.getCurrent_quantity() <= 0) {
                     holder.setQuantity_left(getString(R.string.finished_product));
                     holder.quantity_left.setTextColor(getColor(R.color.red_error));
                 }
                 holder.setMessage(single_item.getExpiration_date());
-                if (single_item.getExpiration_days() >= 5){
+                if (single_item.getExpiration_days() >= 5) {
                     holder.message.setTextColor(getColor(R.color.colorAccent));
-                } else if (single_item.getExpiration_days() > 2){
+                } else if (single_item.getExpiration_days() > 2) {
                     holder.message.setTextColor(getColor(R.color.yellow));
-                } else if (single_item.getExpiration_days() <= 2){
+                } else if (single_item.getExpiration_days() <= 2) {
                     holder.message.setTextColor(getColor(R.color.red_error));
                 }
 
@@ -311,6 +315,8 @@ public class MainActivity extends AppCompatActivity {
                     }
                 });
             }
+            }
+
 
         };
         //Shows the list
