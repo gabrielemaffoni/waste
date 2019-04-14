@@ -20,6 +20,7 @@ CHANGELOG:
 - Variables polishing. Deleted unused methods.
 - Added clearer printings
 """
+import json
 import threading # To use threads
 import getpass # To securely input password
 import pyrebase #Needed to connect to database
@@ -81,6 +82,7 @@ global tmp_item  # Our single item
 global first_setup  # Boolean
 global check_time # The future time to check
 global time_to_check # Boolean
+global check_light  # Boolean to check whether it needs to check light or not
 """
 This method allows the user to log in to the database. It is important because otherwise nothing else works.
 It will ask users their email and password and it will store the userID inside the global variable,
@@ -96,14 +98,21 @@ def initialise_database_and_login():
     global user_email
     global user_password
     global user_id
-    user_email = input('Please, insert your email: ')
-    user_password = getpass.getpass(prompt='Please, insert password: ')
-    user = auth.sign_in_with_email_and_password(user_email, user_password)
-    print("Logged")
-    user_id = user['localId']
-    print("Initialised!")
+    correct_data = False
 
-
+    while correct_data == False:
+        user_email = input('Please, insert your email: ')
+        user_password = getpass.getpass(prompt='Please, insert password: ')
+        try:
+            user = auth.sign_in_with_email_and_password(user_email, user_password)
+            print("Logged")
+            user_id = user['localId']
+            print("Initialised!")
+            correct_data = True
+        except pyrebase.pyrebase.HTTPError as error:
+            error_json = error.args[1]
+            error_to_load = json.loads(error_json)['error']
+            print(error_to_load['message'])
 """
 This method will allow to set a new checking time after just doing the check.
 The amount of check time can be changed at the upper variable "normal_seconds_check".
@@ -182,11 +191,10 @@ Allows the data to be copied in the tmp_item.
 def copy_data(data_to_copy):
     print("Copying data")
     for s_line in data_to_copy:
-        print("Data to copy: %s " % s_line)
         # We need to split the strings so we get a column AND a row.
         column = s_line.split(":")[0]
         line_clean = s_line.split(":")[1]
-        print("%s : %s" % (column, line_clean))
+        print("Copying -> %s : %s" % (column, line_clean))
         if 'int_temperature' in column:
             tmp_item.current_temperature = float(line_clean.strip(","))
         if 'ext_temperature' in column:
@@ -298,48 +306,56 @@ def read_data():
     global line
     global first_setup
     global light_issue
+    global check_light
+    keep_checking = True
     data_reading = []
-    if serialPort.inWaiting() > 0:  # If there is any new string in the serial. this check is important,
-        # otherwise the code will just stay stuck.
-        line = ""
-        # Skips all the lines which are old and not the beginning of the JSON
-        while "{" not in line:
-            line = serialPort.readline().decode()  # .decode() is essential to decode from byte type.
-            print("Line is: %s" % line)
-            # If we restart the data we just break the code
-            if "RESET_MODE" in line:
-                first_setup = True
-                light_issue = False
-                break
-            # Same here
-            if "LIGHT_OFF" in line:
-                light_issue = False
-                break
-            else:
-                print(line)
-                print("No {")
-            # If there is ANY other message
-        # If the line has a new starting point we will start reading as JSON.
-        if "{" in line:
-            # Boolean required to use the while loop to read all data.
-            start_counting = True
-            while start_counting:
-                # We read a new line after the "{"
-                new_line = serialPort.readline().decode()
-                print("New line is: %s" % new_line)
-                # If we reach the end of the JSON, we stop checking.
-                if "}" in new_line:
-                    start_counting = False
-                # The next check are really important for the code not to crash.
-                # If, in fact, stores some wrong data in the dictionary, the whole system will crash.
+    while keep_checking:
+        if serialPort.inWaiting() > 0:  # If there is any new string in the serial. this check is important,
+            # otherwise the code will just stay stuck.
+            line = ""
+            # Skips all the lines which are old and not the beginning of the JSON
+            while "{" not in line:
+                line = serialPort.readline().decode()  # .decode() is essential to decode from byte type.
+                print("Line is: %s" % line)
+                # If we restart the data we just break the code
+                if "RESET_MODE" in line or "FIRST_SETUP" in line:
+                    first_setup = True
+                    light_issue = False
+                    keep_checking = False
+                    check_light = False
+                    break
+                # Same here
+                elif "LIGHT_OFF" in line:
+                    light_issue = False
+                    keep_checking = False
+                    break
+                elif "{" in line:
+                    break
                 else:
-                    # Add the decoded data to a dictionary
-                    data_for_item = new_line.strip('\r\n')
-                    data_reading.append(data_for_item)
+                    print("No {")
+                # If there is ANY other message
+            # If the line has a new starting point we will start reading as JSON.
+            if "{" in line:
+                # Boolean required to use the while loop to read all data.
+                start_counting = True
+                while start_counting:
+                    # We read a new line after the "{"
+                    new_line = serialPort.readline().decode()
+                    print("New line is: %s" % new_line)
+                    # If we reach the end of the JSON, we stop checking.
+                    if "}" in new_line:
+                        keep_checking = False
+                        start_counting = False
+                    # The next check are really important for the code not to crash.
+                    # If, in fact, stores some wrong data in the dictionary, the whole system will crash.
+                    else:
+                        # Add the decoded data to a dictionary
+                        data_for_item = new_line.strip('\r\n')
+                        data_reading.append(data_for_item)
 
-    # IF in general there is no serial available, handle it by writing that the Serial Monitor is not ready.
-    else:
-        print("Serial not ready")
+        # IF in general there is no serial available, handle it by writing that the Serial Monitor is not ready.
+        else:
+            print("Serial not ready")
     # Returns a dictionary
     return data_reading
 
@@ -365,7 +381,10 @@ def emergency_mode():
     global light_issue
     global line
     global first_setup
+    global check_light
+    print("Emergency mode START")
     # Wait 60 seconds to see whether the light is still on
+    print("Waiting 60 seconds")
     time.sleep(60)
     line = ""
     # Checks that the button hasn't been pressed in the last minute
@@ -373,9 +392,11 @@ def emergency_mode():
         line = serialPort.readline().decode()
 
     if "" in line:
+        print("Line is empty")
+        print(line)
+        light_issue = True
         # Until told otherwise, keep checking the data every 10 seconds.
         while light_issue:
-            print("Emergency mode")
             send_request(CHECK_DATA)
             data_to_upload = read_data()
             if light_issue:
@@ -384,10 +405,18 @@ def emergency_mode():
                 update_thread.start()
             analyse_temperature_thread = threading.Thread(name='analyse_temperature', target=analyse_temperature)
             analyse_temperature_thread.start()
-            time.sleep(10)
+            if light_issue:
+                time.sleep(10)
             # If the current temperature is lower than the optimal one, then it can stay calmer.
     elif "FIRST_SETUP" in line:
         first_setup = True
+    elif "LIGHT_OFF" in line:
+        check_light = False
+        print("Emergency mode ENDS")
+        print(line)
+    if light_issue is False:
+        check_light = False
+
 """
 Asks the expiration date to the Database and sends the number of days left to arduino.
 """
@@ -412,6 +441,14 @@ def set_expiration_date():
     send_request(str(difference))
 
 
+def timer_checking():
+    global time_to_check
+    global check_time
+    while True:
+        difference = check_time - datetime.datetime.now()
+        if difference.total_seconds() <= 0:
+            time_to_check = True
+
 """
 This is the main method that will run all the time.
 """
@@ -430,7 +467,7 @@ if __name__ == '__main__':
     check_light = False
     update_thread = threading.Thread(target=update_item, name="updating")
     starting_point = datetime.datetime.now()
-
+    tmp_item = Item()
     print("Program started. It's %s" % starting_point.strftime('%d/%m/%y - %H:%M:%S'))
     # Setting a new check time to initialise the variable
     check_time_thread = threading.Thread(target=set_check_time, name='Set check time start')
@@ -469,10 +506,9 @@ if __name__ == '__main__':
                     check_light = True
                 # Door has been closed again. No problem.
                 if 'LIGHT_OFF' in line:
-                    light_counter = 0
+                    light_issue = False
 
                 if first_setup:
-                    tmp_item = Item()
                     # Getting the key of the item
                     tmp_item.key = first_setup_command()
                     print("Key: %s" % tmp_item.key)
@@ -481,24 +517,26 @@ if __name__ == '__main__':
                     # Sends the requests of the data to the Arduino
                     send_request(CHECK_DATA)
                     # Reads the data requested
-                    data_gotten = read_data()
+                    data_got = read_data()
                     # Copies the data on the Item object and uploads them on the database
-                    copy_data(data_gotten)
-                    update_thread.start()
+                    copy_data(data_got)
+                    # We open a new thread to update the database. Meanwhile the program will be running the optimal temperature
+                    update_database = threading.Thread(target=update_item, name='update database')
+                    update_database.start()
                     # Gets the optimal temperature from the database
                     optimal_temp_thread = threading.Thread(target=set_optimal_temperature, name='optimal_temp')
                     optimal_temp_thread.start()
                     # Establishes when it is going to check the data next
-                    check_time_thread = threading.Thread(target=set_check_time, name='set_check_time')
-                    new_check_time = check_time_thread.start()
+                    set_check_time_thread_setup = threading.Thread(target=set_check_time, name='set check time')
+                    set_check_time_thread_setup.start()
                     # Ends the setup
                     first_setup = False
-                    # Tells the Arduino how many days left to the expiration date
-                    expiration_date_thread = threading.Thread(target=set_expiration_date, name='expiration date')
-                    expiration_date_thread.start()
                     # Sets total quantity
                     set_total_quantity_thread = threading.Thread(target=set_total_quantity, name='set total quantity')
                     set_total_quantity_thread.start()
+                    # Tells the Arduino how many days left to the expiration date
+                    set_expiration_date()
+                    expiration_date_check = datetime.datetime.now() + datetime.timedelta(days=1)
                     print('Ended first setup!')
 
             if check_light is True:
@@ -507,12 +545,14 @@ if __name__ == '__main__':
             if time_to_check:
                 send_request(CHECK_DATA)
                 # Once we got the data we just upload them.
-                data_gotten = read_data()
+                data_got = read_data()
+                copy_data(data_got)
                 update_thread.start()
+                check_time_thread.start()
                 time.sleep(5)
 
             # Everyday it will update the database and arduino.
-            if expiration_date_check.day == datetime.datetime.now():
+            if expiration_date_check.day == datetime.datetime.now().day:
                 set_expiration_date()
                 expiration_date_check = datetime.datetime.now() + datetime.timedelta(days=1)
 
