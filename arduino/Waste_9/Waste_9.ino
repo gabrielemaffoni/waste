@@ -106,7 +106,7 @@ void loop() {
       Serial.println("Waiting for commands");
     }
     // IF instead is first setup mode
-    if (first_setup == true){
+    if (first_setup == true){ 
       // We turn off the long press mode
       long_press_active = false;
       // We restart stream counter
