@@ -64,7 +64,7 @@ int button_counter = 0;
 bool door_open = false;
 String line_to_check = "";
 int days_until_expiration = 0;
-
+bool expiration_date_set = false;
 bool emergency_mode = false;
 int light_counter = 0;
 long voltage_timer = 0;
@@ -98,7 +98,7 @@ void setup() {
 }
 
 void loop() {
-  // The line will be resetted
+  // The line will be reset
   line_to_check = "";
     // if it is not first setup mode
     if (first_setup == false){
@@ -109,8 +109,6 @@ void loop() {
     if (first_setup == true){
       // We turn off the long press mode
       long_press_active = false;
-      // We turn off the first setup mode to avoid loops
-      first_setup = false;
       // We restart stream counter
       streams_counter = 0;
       // We restart the light counter
@@ -119,11 +117,12 @@ void loop() {
       Serial.println("FIRST_SETUP!");
       // We visually say to the user that it's first setup mode by multicolouring our LED
       while(Serial.available() == 0){
-        //blink_led_multicolor(500);
+        blink_led_multicolor(500);
       }
    }
+
     // While there is no message from the Raspberry
-    while(Serial.available() == 0){
+    while(Serial.available() == 0 && first_setup == false){
       // We check whether the button has been pressed
       button_state = digitalRead(button_pin);
       check_button();
@@ -141,6 +140,10 @@ void loop() {
     }
     // If there is new message forom the raspberry
     if (Serial.available() > 0){
+        if (first_setup == true){
+            // We turn off the first setup mode the first time
+            first_setup = false;
+        }
       // Save the line to check
       line_to_check = Serial.readString();
     }
@@ -448,26 +451,34 @@ void check_button(){
 
 void check_light(){
   // If luminosity is more than 0
-  if (luminosity() > 0){
+  if (luminosity() > 0 && door_open == false){
     // Says that the light is on
     Serial.println("LIGHT_ON!");
     door_open = true;
     // Lights up the LED for 3 seconds at the first time until the door closes again.
-    if (light_counter == 0){
-      long fade_timer = millis() + 3000;
-      long stop_timer = millis();
-      while(stop_timer < fade_timer){
-        if (days_until_expiration <=2){
-          red();
-        } else if (days_until_expiration < 5){
-          yellow();
-        } else if (days_until_expiration >= 5){
-          green();
-        }
-        stop_timer = millis();
+
+    long fade_timer = millis() + 3000;
+    long stop_timer = millis();
+    while(stop_timer < fade_timer){
+      if (days_until_expiration <=2){
+        red();
+      } else if (days_until_expiration < 5){
+        yellow();
+      } else if (days_until_expiration >= 5){
+        green();
       }
-      black();
-      light_counter += 1;
+      stop_timer = millis();
+    }
+    black();
+  
+    
+    while(Serial.available() == 0){
+      button_state = digitalRead(button_pin);
+      check_button();
+      if (Serial.available()> 0){
+        Serial.println("Going out!");
+        break;
+      }
     }
     // If the door is closed again it prints "LIGHT_OFF"
   } else if (luminosity() <= 0 && door_open == true){
@@ -490,7 +501,9 @@ void get_expiration_days(){
   }
   if (Serial.available()> 0){
     // Sets the general variable as the right amount.
-    days_until_expiration = Serial.readString().toInt();
+    String string_days = Serial.readString();
+    days_until_expiration = string_days.toInt();
+    expiration_date_set = true;
   }
 
 }
