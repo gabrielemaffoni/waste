@@ -244,7 +244,7 @@ def wait_for_data():
             keep_waiting = False
         else:
             # Waits three seconds before checking again
-            time.sleep(3)
+            simple_counter(3)
 
 
 """
@@ -383,9 +383,8 @@ def emergency_mode():
     global first_setup
     global check_light
     print("Emergency mode START")
-    # Wait 60 seconds to see whether the light is still on
-    print("Waiting 60 seconds")
-    time.sleep(60)
+    # Wait 30 seconds to see whether the light is still on
+    checker_counter(30)
     line = ""
     # Checks that the button hasn't been pressed in the last minute
     if serialPort.in_waiting > 0:
@@ -406,7 +405,10 @@ def emergency_mode():
             analyse_temperature_thread = threading.Thread(name='analyse_temperature', target=analyse_temperature)
             analyse_temperature_thread.start()
             if light_issue:
-                time.sleep(10)
+                checker_counter(10)
+                if first_setup is True:
+                    light_issue = False
+                    break
             # If the current temperature is lower than the optimal one, then it can stay calmer.
     elif "FIRST_SETUP" in line:
         first_setup = True
@@ -435,8 +437,8 @@ def set_expiration_date():
     database.child('items').child(user_id).child(tmp_item.key).child(EXPIRATION_DAYS).set(difference)
     # We are telling to the arduino that the next data we're sending is going to be the expiration days
     send_request('expiration')
-    # Wait for 10 seconds to avoid problems
-    time.sleep(10)
+    # Wait for 2 seconds to avoid problems
+    simple_counter(2)
     # Sends the difference. Important converting it to string explicitly, as "encode" mode doesn't apply to integers.
     send_request(str(difference))
 
@@ -449,6 +451,38 @@ def timer_checking():
         if difference.total_seconds() <= 0:
             time_to_check = True
 
+
+def simple_counter(seconds):
+    while seconds > 0:
+        print("Waiting for %s s" % seconds, flush=True, end='\r')
+        seconds -= 1
+        time.sleep(1)
+
+
+def checker_counter(seconds):
+    global check_light
+    global light_issue
+    global first_setup
+    while seconds > 0:
+        print("Waiting for %s s" % seconds, flush=True, end='\r')
+        seconds -= 1
+        if serialPort.in_waiting > 0:
+            line = serialPort.readline().decode()
+            if 'FIRST_SETUP' in line:
+                first_setup = True
+                break
+                # Door is open. Start counting if needed.
+            elif 'LIGHT_ON' in line:
+                check_light = True
+                break
+                # Door has been closed again. No problem.
+            elif 'LIGHT_OFF' in line:
+                light_issue = False
+                break
+            else:
+                print(line)
+        else:
+            time.sleep(1)
 """
 This is the main method that will run all the time.
 """
@@ -549,7 +583,7 @@ if __name__ == '__main__':
                 copy_data(data_got)
                 update_thread.start()
                 check_time_thread.start()
-                time.sleep(5)
+                simple_counter(5)
 
             # Everyday it will update the database and arduino.
             if expiration_date_check.day == datetime.datetime.now().day:
