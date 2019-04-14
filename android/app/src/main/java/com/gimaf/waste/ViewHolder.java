@@ -1,6 +1,5 @@
 package com.gimaf.waste;
 
-
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.widget.LinearLayout;
@@ -18,6 +17,7 @@ public class ViewHolder extends RecyclerView.ViewHolder {
     public TextView type_and_quantity;
     public TextView quantity_left;
     public TextView message;
+    public Item item;
 
     public ViewHolder(View itemView) {
         super(itemView);
@@ -27,6 +27,7 @@ public class ViewHolder extends RecyclerView.ViewHolder {
         type_and_quantity = itemView.findViewById(R.id.type_and_total_quantity);
         quantity_left = itemView.findViewById(R.id.current_quantity);
         message = itemView.findViewById(R.id.brand_table_view);
+        item = new Item();
     }
 
 
@@ -42,5 +43,9 @@ public class ViewHolder extends RecyclerView.ViewHolder {
 
     public void setMessage(String message) {
         this.message.setText(message);
+    }
+
+    public void setItem(Item item){
+        this.item = item;
     }
 }

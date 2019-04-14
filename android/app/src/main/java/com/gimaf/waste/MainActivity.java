@@ -235,8 +235,6 @@ public class MainActivity extends AppCompatActivity {
                 .getReference()
                 .child("items").child(uid);
         Log.d("GABRIELE", "Path to the database: " + query.toString());
-        //FirebaseRecyclerOptions<Item> options = new FirebaseRecyclerOptions.Builder<Item>().setQuery(query, Item.class).build();
-
 
         FirebaseRecyclerOptions<Item> options = new FirebaseRecyclerOptions.Builder<Item>().setQuery(query, new SnapshotParser<Item>() {
 
@@ -245,6 +243,7 @@ public class MainActivity extends AppCompatActivity {
             public Item parseSnapshot(@NonNull DataSnapshot snapshot) {
                 Item newItem = new Item();
                 Log.d("Fetch", "Found item. Creating item");
+
                 if (!snapshot.child("new_product").getValue().toString().equals("yes")) {
                     try {
                         // Assigns to the new item the right amount of data
@@ -257,8 +256,11 @@ public class MainActivity extends AppCompatActivity {
                         newItem.stringToDouble(QUANTITY_LEFT_DB, snapshot.child(QUANTITY_LEFT_DB).getValue().toString());
                         Double quantity_converted = convert_value_by_measure(newItem.getMeasure(), newItem.getCurrent_quantity());
                         newItem.setCurrent_quantity(quantity_converted);
-                        newItem.setExpiration_days(Integer.parseInt(snapshot.child(EXPIRATION_DAYS_DB).getValue().toString()));
+                        if (snapshot.hasChild(EXPIRATION_DAYS_DB)) {
+                            newItem.setExpiration_days(Integer.parseInt(snapshot.child(EXPIRATION_DAYS_DB).getValue().toString()));
+                        }
                         newItem.setItem_key(snapshot.getKey());
+
                     } catch (NullPointerException exception) {
                         Log.d("Item list empty!", exception.getLocalizedMessage());
                     }
@@ -268,7 +270,7 @@ public class MainActivity extends AppCompatActivity {
             }
         }).build();
 
-        // Adds the data to the recyclerview using custom ViewHolder class.
+        // Adds the data to the recycler view using custom ViewHolder class.
         recyclerAdapter = new FirebaseRecyclerAdapter<Item, ViewHolder>(options) {
             @Override
             public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
@@ -289,6 +291,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             protected void onBindViewHolder(@NonNull ViewHolder holder, final int position, @NonNull final Item single_item) {
             if (single_item.getCurrent_quantity() != null) {
+
                 holder.setType_and_quantity(single_item.getProduct_type() + " " + single_item.getTotal_quantity() + " " + single_item.getMeasure());
                 holder.setQuantity_left(String.format(getResources().getString(R.string.double_format), single_item.getCurrent_quantity()));
                 if (single_item.getCurrent_quantity() <= 0) {
@@ -310,7 +313,7 @@ public class MainActivity extends AppCompatActivity {
                         //If the item is clicked it will send also the item key, which will be useful to gather data from the database
                         Intent intent = new Intent(view.getContext(), ItemView.class);
                         intent.putExtra(KEY_DB, single_item.getItem_key());
-                        Log.d("EXTRA", intent.getExtras().getString(KEY_DB));
+                        Log.d("EXTRA", single_item.getItem_key());
                         startActivity(intent);
                     }
                 });

@@ -27,6 +27,7 @@ dependencies {
     implementation 'com.google.firebase:firebase-auth:16.2.1'
     implementation 'com.firebaseui:firebase-ui-database:4.3.1'
     implementation 'com.google.firebase:firebase-database:16.1.0'
+    implementation 'com.google.firebase:firebase-ml-vision:19.0.3'
     implementation 'com.airbnb.android:lottie:2.7.0'
 
     implementation 'com.android.support:appcompat-v7:28.0.0'
@@ -37,7 +38,7 @@ dependencies {
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'com.android.support.test:runner:1.0.2'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
-    implementation 'android.arch.work:work-runtime:1.0.0'
+    implementation 'android.arch.work:work-runtime:1.0.1'
 
     //implementation 'org.jetbrains:annotations-java5:15.0'
 }
