@@ -309,6 +309,7 @@ def read_data():
     global check_light
     keep_checking = True
     data_reading = []
+    serial_not_ready_counter = 1
     while keep_checking:
         if serialPort.inWaiting() > 0:  # If there is any new string in the serial. this check is important,
             # otherwise the code will just stay stuck.
@@ -328,6 +329,7 @@ def read_data():
                 elif "LIGHT_OFF" in line:
                     light_issue = False
                     keep_checking = False
+                    print("Light is off")
                     break
                 elif "{" in line:
                     break
@@ -355,7 +357,9 @@ def read_data():
 
         # IF in general there is no serial available, handle it by writing that the Serial Monitor is not ready.
         else:
-            print("Serial not ready")
+            if serial_not_ready_counter == 1:
+                print("Serial not ready")
+                serial_not_ready_counter += 1
     # Returns a dictionary
     return data_reading
 
@@ -463,8 +467,9 @@ def checker_counter(seconds):
     global check_light
     global light_issue
     global first_setup
+    global line
     while seconds > 0:
-        print("Waiting for %s s" % seconds, flush=True, end='\r')
+        print("Waiting for %s s" % seconds, flush=True)
         seconds -= 1
         if serialPort.in_waiting > 0:
             line = serialPort.readline().decode()
@@ -477,12 +482,12 @@ def checker_counter(seconds):
                 break
                 # Door has been closed again. No problem.
             elif 'LIGHT_OFF' in line:
+                print("Light is off")
                 light_issue = False
                 break
             else:
                 print(line)
-        else:
-            time.sleep(1)
+        time.sleep(1)
 """
 This is the main method that will run all the time.
 """
