@@ -41,14 +41,14 @@
         app:layout_constraintTop_toTopOf="@+id/products_list"
         app:layout_constraintVertical_bias="0.92" />
 
-    <Button
+    <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/item_updated_button"
         style="@style/Widget.AppCompat.Button.Colored"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
+        android:layout_marginStart="24dp"
         android:layout_marginTop="8dp"
-        android:layout_marginEnd="8dp"
+        android:layout_marginEnd="24dp"
         android:layout_marginBottom="8dp"
         android:text="@string/item_updated_cta"
         android:visibility="gone"

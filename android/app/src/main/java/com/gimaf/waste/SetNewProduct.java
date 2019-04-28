@@ -5,7 +5,10 @@ import android.content.Intent;
 import android.icu.util.Calendar;
 import android.os.Bundle;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
+import androidx.cardview.widget.CardView;
 
+import android.util.ArrayMap;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
@@ -13,15 +16,21 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.DatePicker;
 import android.widget.EditText;
+import android.widget.HorizontalScrollView;
+import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.Toast;
 
+import com.google.android.material.textfield.TextInputEditText;
+import com.google.android.material.textfield.TextInputLayout;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.annotations.Nullable;
 
+import java.text.SimpleDateFormat;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 
 import static com.gimaf.waste.Item.BRAND_DB;
@@ -39,17 +48,24 @@ import static com.gimaf.waste.Item.QUANTITY_LEFT_DB;
  */
 
 public class SetNewProduct extends AppCompatActivity implements AdapterView.OnItemSelectedListener {
-    private Spinner product_type_dropdown;
-    private Spinner measure_dropdown;
-    private EditText expiration_date_text;
-    private EditText brand_text;
-    private EditText pack_size_text;
+    private Spinner pack_size_dropdown;
+    private TextInputLayout pick_a_date_layout;
+    private TextInputEditText pick_a_date_text;
+
     private Button save_button;
     private String measure_selected;
     private String product_type_selected;
     private Calendar expiration_date_calendar;
     private FirebaseUser currentUser;
     private FirebaseAuth auth;
+    private HorizontalScrollView productTypeScrollView;
+    private HorizontalScrollView pack_size_scrollView;
+    private LinearLayout pack_size_linear_layout;
+    private LinearLayout productTypeLinearLayout;
+    private Toolbar toolbar;
+    private CardView milk, cheese, wine, small, medium, big;
+    //TODO: finish code!
+
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -60,21 +76,25 @@ public class SetNewProduct extends AppCompatActivity implements AdapterView.OnIt
         expiration_date_calendar = Calendar.getInstance();
         auth = FirebaseAuth.getInstance();
 
-        product_type_dropdown = findViewById(R.id.product_type_spinner);
-        measure_dropdown = findViewById(R.id.measure_choicer);
-        expiration_date_text = findViewById(R.id.expiration_date_date);
-        brand_text = findViewById(R.id.brand_value);
-        pack_size_text = findViewById(R.id.amount_value);
         save_button = findViewById(R.id.save_product);
-        setSpinner(product_type_dropdown, R.array.product_types);
-        setSpinner(measure_dropdown, R.array.measures);
+        pick_a_date_layout = findViewById(R.id.pick_a_date_field);
+        pick_a_date_text = findViewById(R.id.pick_a_date_edit_text);
+        setTodayText();
+        productTypeScrollView = findViewById(R.id.product_type_choice_wrapper);
+        productTypeLinearLayout = findViewById(R.id.product_type_choice);
+        pack_size_linear_layout = findViewById(R.id.pack_size_linear_layout);
+        pack_size_scrollView = findViewById(R.id.pack_size_choice);
+        toolbar = findViewById(R.id.new_product_navbar);
+
+        setSpinner(pack_size_dropdown, R.array.product_types);
 
         currentUser = auth.getCurrentUser();
+
 
         /**
          * Shows a calendar view for the expiration date
          */
-        expiration_date_text.setOnClickListener(new View.OnClickListener() {
+        pick_a_date_text.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 setCalendarView();
@@ -89,26 +109,15 @@ public class SetNewProduct extends AppCompatActivity implements AdapterView.OnIt
             @Override
             public void onClick(View v) {
                 //check data
-                Double pack_size = Double.parseDouble(pack_size_text.getText().toString());
-                String brand_final_text = brand_text.getText().toString();
-                String expiration_date = expiration_date_text.getText().toString();
+               // Double pack_size = Double.parseDouble(pack_size_text.getText().toString());
 
-                measure_selected = measure_dropdown.getSelectedItem().toString();
-                product_type_selected = product_type_dropdown.getSelectedItem().toString();
+                String expiration_date = pick_a_date_text.getText().toString();
+
+                product_type_selected = pack_size_dropdown.getSelectedItem().toString();
 
 
-                if (pack_size == 0 || brand_final_text.isEmpty() || expiration_date.isEmpty() || measure_selected.isEmpty() || product_type_selected.isEmpty()) {
+                if ( expiration_date.isEmpty() ||  product_type_selected.isEmpty()) {
                     Toast.makeText(SetNewProduct.this, "Please, fill all the field first!", Toast.LENGTH_SHORT).show();
-                } else {
-                    if (pack_size_text.getText().toString().matches("[0-9]+")) {
-                        updateFirebase(productKey, pack_size, brand_final_text, expiration_date);
-                        Toast.makeText(SetNewProduct.this, "Product uploaded!", Toast.LENGTH_SHORT).show();
-                        finish();
-                    } else {
-                        Toast.makeText(SetNewProduct.this, "Please, insert numbers only!!", Toast.LENGTH_SHORT).show();
-                        pack_size_text.setBackgroundColor(getResources().getColor(R.color.red_error, getTheme()));
-                    }
-
                 }
 
 
@@ -139,12 +148,10 @@ public class SetNewProduct extends AppCompatActivity implements AdapterView.OnIt
      */
     @Override
     public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-        if (parent == product_type_dropdown.getParent()) {
-            product_type_selected = product_type_dropdown.getItemAtPosition(position).toString();
+        if (parent == pack_size_dropdown.getParent()) {
+            product_type_selected = pack_size_dropdown.getItemAtPosition(position).toString();
         }
-        if (parent == measure_dropdown.getParent()) {
-            measure_selected = measure_dropdown.getItemAtPosition(position).toString();
-        }
+
     }
 
     /**
@@ -212,12 +219,19 @@ public class SetNewProduct extends AppCompatActivity implements AdapterView.OnIt
                         String chosenDate = day_string + "/" + month_string
                                 + "/" + String.valueOf(year);
                         Log.d("EXPIRATION DATE", chosenDate);
-                        expiration_date_text.setText(chosenDate);
+                        pick_a_date_text.setText(chosenDate);
                     }
                 }, mYear, mMonth, mDay);
         datePickerDialog.setTitle("Choose expiration date");
         datePickerDialog.show();
     }
 
+    private void setTodayText(){
+
+        SimpleDateFormat day_string = new SimpleDateFormat("dd/MM/yyyy");
+
+
+        pick_a_date_text.setText(day_string.format(expiration_date_calendar));
+    }
 
 }
