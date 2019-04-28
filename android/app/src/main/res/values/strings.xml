@@ -4,39 +4,39 @@
   -->
 
 <resources>
-    <string name="app_name">Waste</string>
+    <string name="app_name" translatable="false">Waste</string>
     <string name="title_home">Products List</string>
     <string name="title_dashboard">Dashboard</string>
-    <string name="title_notifications">Notifications</string>
+    <string name="title_notifications" translatable="false">Notifications</string>
     <string name="quantity">Quantity</string>
     <string name="int_temperature">Internal temperature</string>
     <string name="ext_temperature">External temperature</string>
-    <string name="brand">Brand</string>
+    <string name="brand" translatable="false">Brand</string>
     <string name="product_type">Product type</string>
     <string name="set_product_type">Set product type</string>
     <string name="total_quantity">Total quantity</string>
     <string name="measure">Measure</string>
-    <string name="image_description">The image of the product</string>
+    <string name="image_description" translatable="false">The image of the product</string>
     <string name="temperature">Temperature</string>
     <string name="expiration_date">Expiration Date</string>
-    <string name="msg_token_fmt">%s</string>
-    <string name="default_notification_channel_id">Channel 1</string>
-    <string name="fcm_message">Message</string>
-    <string name="double_format">%.2f</string>
+    <string name="msg_token_fmt" translatable="false">%s</string>
+    <string name="default_notification_channel_id" translatable="false">Channel 1</string>
+    <string name="fcm_message" translatable="false">Message</string>
+    <string name="double_format" translatable="false">%.2f</string>
     <string name="set_new_product">Set new product</string>
-    <string name="single_item_name">Single item name</string>
+    <string name="single_item_name" translatable="false">Single item name</string>
     <string name="fill_all_data">Please, fill all the data</string>
     <string name="save_product">Placed!</string>
     <string name="pick_a_date">Pick a date</string>
     <string name="brand_label">What\'s the brand?</string>
     <string name="brand_hint">E.g. Mila</string>
-    <string name="date_autofill">01/02/2019</string>
+    <string name="date_autofill" translatable="false">01/02/2019</string>
     <string name="pack_size_label">Pack size</string>
-    <string name="amount_example">1500</string>
+    <string name="amount_example" translatable="false">1500</string>
     <string name="amount_example_int">E.g. 300</string>
     <string name="item_updated_message">Item updated!</string>
     <string name="item_updated_cta">Tap here to see it!</string>
-    <string name="login_title">Sign in</string>
+    <string name="login_title" translatable="false">Sign in</string>
     <string name="your_email">Your email</string>
     <string name="your_password">Your password</string>
     <string name="login_button">Enter</string>
@@ -45,7 +45,16 @@
     <string name="registered_already">Already registered?</string>
     <string name="new_user_question">New user?</string>
     <string name="opt_temperature">Optimal temperature</string>
-    <string name="gradient_background">Gradient background</string>
+    <string name="gradient_background" translatable="false">Gradient background</string>
     <string name="signup_subtitle">to become the new Batman.</string>
     <string name="finished_product">It\'s finished! :(</string>
+    <string name="milk">Milk</string>
+    <string name="cheese">Cheese</string>
+    <string name="wine">Wine</string>
+    <string name="pints">Pints</string>
+    <string name="liters" translatable="false">L</string>
+    <string name="militers" translatable="false">Ml</string>
+    <string name="item_removed">was removed!</string>
+    <string name="color_accent" translatable="false">#3BB54A</string>
+    <string name="red_error" translatable="false">#B23B4D</string>
 </resources>

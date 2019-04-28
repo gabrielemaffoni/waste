@@ -30,6 +30,13 @@
             {
               "client_id": "743200583234-u2lsiikb387h4hib7u9rn49luhotm77t.apps.googleusercontent.com",
               "client_type": 3
+            },
+            {
+              "client_id": "743200583234-77kr60pi3et62t1noei4q5s70bcufg3t.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "gimaf.waste"
+              }
             }
           ]
         }

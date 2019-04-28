@@ -1,14 +1,18 @@
 package com.gimaf.waste;
 
 import android.content.Intent;
+import android.graphics.Canvas;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.design.widget.BottomNavigationView;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.Toolbar;
+
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.*;
+import androidx.appcompat.widget.Toolbar;
+import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.coordinatorlayout.widget.CoordinatorLayout;
+import androidx.recyclerview.widget.ItemTouchHelper;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
 import android.util.ArrayMap;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -25,6 +29,8 @@ import com.firebase.ui.database.FirebaseRecyclerOptions;
 import com.firebase.ui.database.SnapshotParser;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.ChildEventListener;
@@ -33,6 +39,7 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
+import com.google.firebase.database.annotations.Nullable;
 import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.firebase.iid.InstanceIdResult;
 
@@ -61,6 +68,7 @@ public class MainActivity extends AppCompatActivity {
     private Toolbar bar;
     private FirebaseRecyclerAdapter recyclerAdapter;
     private FirebaseAuth auth;
+    private ConstraintLayout container;
     private BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
             = new BottomNavigationView.OnNavigationItemSelectedListener() {
         /**
@@ -77,6 +85,7 @@ public class MainActivity extends AppCompatActivity {
             return false;
         }
     };
+
 
     /**
      * The activity will start checking for data updates
@@ -96,6 +105,7 @@ public class MainActivity extends AppCompatActivity {
     /**
      * On creating the activity, the code will check if there is new data on the database.
      * Meanwhile, it will create also on the top right of the navbar a menu item in which "Log out" button is available.
+     *
      * @param savedInstanceState Bundle
      */
     @Override
@@ -108,7 +118,7 @@ public class MainActivity extends AppCompatActivity {
         Log.d("GABRIELE", "Activity On Create");
         bar = findViewById(R.id.bar);
         setSupportActionBar(bar);
-
+        container = findViewById(R.id.container);
         //Inflates the menu
         bar.inflateMenu(R.menu.right_bar);
 
@@ -117,10 +127,11 @@ public class MainActivity extends AppCompatActivity {
         update_button = findViewById(R.id.item_updated_button);
         update_message = findViewById(R.id.message_updated);
         navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
+
+
         //Creates the layout of the list
         createLayoutManager();
-
-
+        enableSwipeToDeleteAndUndo();
     }
 
 
@@ -185,6 +196,7 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * Uploads the token on firebase under "users"-
+     *
      * @param token A map that contains "token": the token to upload
      */
     //Saves the token on firebase
@@ -206,17 +218,18 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * Converts the value from ml to pints and liters
-     * @param measure_pack The measure decided by the user
+     *
+     * @param measure_pack          The measure decided by the user
      * @param total_quantity_amount The total amount
      * @return The converted value, if any.
      */
 
-    private double convert_value_by_measure(String measure_pack, Double total_quantity_amount){
+    private double convert_value_by_measure(String measure_pack, Double total_quantity_amount) {
         Double converted_value = 0.0;
-        if (measure_pack.equals("Pints")){
-            converted_value = total_quantity_amount/568;
-        } else if (measure_pack.equals("L")){
-            converted_value = total_quantity_amount/1000;
+        if (measure_pack.equals("Pints")) {
+            converted_value = total_quantity_amount / 568;
+        } else if (measure_pack.equals("L")) {
+            converted_value = total_quantity_amount / 1000;
         } else {
             converted_value = total_quantity_amount;
         }
@@ -265,7 +278,7 @@ public class MainActivity extends AppCompatActivity {
                         Log.d("Item list empty!", exception.getLocalizedMessage());
                     }
                 }
-                    return newItem;
+                return newItem;
 
             }
         }).build();
@@ -290,34 +303,36 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             protected void onBindViewHolder(@NonNull ViewHolder holder, final int position, @NonNull final Item single_item) {
-            if (single_item.getCurrent_quantity() != null) {
+                if (single_item.getCurrent_quantity() != null) {
 
-                holder.setType_and_quantity(single_item.getProduct_type() + " " + single_item.getTotal_quantity() + " " + single_item.getMeasure());
-                holder.setQuantity_left(String.format(getResources().getString(R.string.double_format), single_item.getCurrent_quantity()));
-                if (single_item.getCurrent_quantity() <= 0) {
-                    holder.setQuantity_left(getString(R.string.finished_product));
-                    holder.quantity_left.setTextColor(getColor(R.color.red_error));
-                }
-                holder.setMessage(single_item.getExpiration_date());
-                if (single_item.getExpiration_days() >= 5) {
-                    holder.message.setTextColor(getColor(R.color.colorAccent));
-                } else if (single_item.getExpiration_days() > 2) {
-                    holder.message.setTextColor(getColor(R.color.yellow));
-                } else if (single_item.getExpiration_days() <= 2) {
-                    holder.message.setTextColor(getColor(R.color.red_error));
-                }
-
-                holder.wrapper.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-                        //If the item is clicked it will send also the item key, which will be useful to gather data from the database
-                        Intent intent = new Intent(view.getContext(), ItemView.class);
-                        intent.putExtra(KEY_DB, single_item.getItem_key());
-                        Log.d("EXTRA", single_item.getItem_key());
-                        startActivity(intent);
+                    holder.setType_and_quantity(single_item.getProduct_type() + " " + single_item.getTotal_quantity() + " " + single_item.getMeasure());
+                    holder.setQuantity_left(String.format(getResources().getString(R.string.double_format), single_item.getCurrent_quantity()));
+                    if (single_item.getCurrent_quantity() <= 0) {
+                        holder.setQuantity_left(getString(R.string.finished_product));
+                        holder.quantity_left.setTextColor(getColor(R.color.red_error));
                     }
-                });
-            }
+                    holder.setMessage(single_item.getExpiration_date());
+                    if (single_item.getExpiration_days() >= 5) {
+                        holder.message.setTextColor(getColor(R.color.colorAccent));
+                    } else if (single_item.getExpiration_days() > 2) {
+                        holder.message.setTextColor(getColor(R.color.yellow));
+                    } else if (single_item.getExpiration_days() <= 2) {
+                        holder.message.setTextColor(getColor(R.color.red_error));
+                    }
+
+                    holder.wrapper.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            //If the item is clicked it will send also the item key, which will be useful to gather data from the database
+                            Intent intent = new Intent(view.getContext(), ItemView.class);
+                            intent.putExtra(KEY_DB, single_item.getItem_key());
+                            Log.d("EXTRA", single_item.getItem_key());
+                            startActivity(intent);
+                        }
+                    });
+                }
+
+
             }
 
 
@@ -387,6 +402,7 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * Inflates the menu on the right top angle
+     *
      * @param menu the menu to be inflated
      * @return
      */
@@ -399,6 +415,7 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * In case people tap on "Logout" it will log out from the main user
+     *
      * @param item
      * @return
      */
@@ -435,5 +452,36 @@ public class MainActivity extends AppCompatActivity {
         startActivity(logIn);
         finish();
     }
+
+    private void enableSwipeToDeleteAndUndo() {
+        SwipeToDeleteCallback swipeToDeleteCallback = new SwipeToDeleteCallback(this) {
+            @Override
+            public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int i) {
+
+
+                final int position = viewHolder.getAdapterPosition();
+                final String keyToDelete = recyclerAdapter.getRef(position).getKey();
+                final String itemName = recyclerAdapter.getRef(position).child("product_type").toString();
+                if (!( keyToDelete== null)) {
+                    database.child("items").child(currentUser.getUid()).child(keyToDelete).removeValue(new DatabaseReference.CompletionListener() {
+                        @Override
+                        public void onComplete(@androidx.annotation.Nullable DatabaseError databaseError, @NonNull DatabaseReference databaseReference) {
+                            String textToPrint = itemName + getResources().getString(R.string.item_removed);
+                            Snackbar snackbar = Snackbar
+                                    .make(container, textToPrint, Snackbar.LENGTH_LONG);
+                            snackbar.show();
+                        }
+                    });
+                }
+
+
+
+            }
+
+        };
+        ItemTouchHelper itemTouchhelper = new ItemTouchHelper(swipeToDeleteCallback);
+        itemTouchhelper.attachToRecyclerView(recyclerView);
+    }
+
 
 }

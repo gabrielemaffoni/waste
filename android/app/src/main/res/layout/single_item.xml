@@ -3,17 +3,16 @@
   ~ All rights reserved. This code is intended to be used only by people who really want to save the planet. Hence, do not try to steal from anything. Feel free to add ideas, but I won't monitor that much GitHub. Peace and love guys.
   -->
 
-<android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <android.support.v4.widget.NestedScrollView
+    <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        app:layout_behavior="android.support.design.widget.AppBarLayout$ScrollingViewBehavior">
+        android:layout_height="match_parent">
 
-        <android.support.constraint.ConstraintLayout
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/single_item"
             android:layout_width="match_parent"
             android:layout_height="match_parent">
@@ -206,7 +205,7 @@
                 app:layout_constraintStart_toEndOf="@+id/expiration_date_label"
                 app:layout_constraintTop_toBottomOf="@+id/type_and_total_quantity" />
 
-            <android.support.v7.widget.Toolbar
+            <androidx.appcompat.widget.Toolbar
                 android:id="@+id/toolbar"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -227,6 +226,6 @@
                 app:layout_constraintTop_toBottomOf="@+id/type_and_total_quantity" />
 
 
-        </android.support.constraint.ConstraintLayout>
-    </android.support.v4.widget.NestedScrollView>
-</android.support.design.widget.CoordinatorLayout>
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.core.widget.NestedScrollView>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

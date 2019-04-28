@@ -5,14 +5,18 @@
 
 <resources>
     <string-array name="product_types">
-        <item>Milk</item>
-        <item>Red wine</item>
-        <item>White wine</item>
-        <item>Other thing</item>
+        <item>@string/milk</item>
+        <item>@string/wine</item>
+        <item>@string/cheese</item>
     </string-array>
     <string-array name="measures">
-        <item>Pints</item>
-        <item>L</item>
-        <item>Ml</item>
+        <item>@string/pints</item>
+        <item>@string/liters</item>
+        <item>@string/militers</item>
+    </string-array>
+    <string-array name="milk_pack_size">
+        <item>500</item>
+        <item>1</item>
+        <item>2</item>
     </string-array>
 </resources>

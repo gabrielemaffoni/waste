@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="brand_label">Qual è il brand?</string>
+    <string name="cheese">Formaggio</string>
+    <string name="amount_example_int">Es. 300</string>
+    <string name="brand_hint">Es. Mila</string>
+    <string name="expiration_date">Data di scadenza</string>
+    <string name="ext_temperature">Temperatura esterna</string>
+    <string name="fill_all_data">Per piacere, inserisci tutti i dati</string>
+    <string name="finished_product">Finito :(</string>
+    <string name="int_temperature">Temperatura interna</string>
+    <string name="item_removed">È stato rimosso!</string>
+    <string name="item_updated_cta">Tappa qui per vederlo!</string>
+    <string name="item_updated_message">Oggetto aggiornato!</string>
+    <string name="login_button">Entra!</string>
+    <string name="login_second">per salvare il mondo</string>
+    <string name="measure">Misura</string>
+    <string name="milk">Latte</string>
+    <string name="new_user_question">Nuovo utente?</string>
+    <string name="opt_temperature">Temperatura ottimale</string>
+    <string name="pack_size_label">Dimensione pacchetto</string>
+    <string name="pick_a_date">Scegli una data</string>
+    <string name="pints">Pinte (inglesi)</string>
+    <string name="product_type">Tipo di prodotto</string>
+    <string name="quantity">Quantità</string>
+    <string name="registered_already">Già registrato?</string>
+    <string name="save_product">Messo!</string>
+    <string name="set_new_product">Imposta il nuovo prodotto</string>
+    <string name="set_product_type">Imposta il tipo di prodotto</string>
+    <string name="signup">Registrati</string>
+    <string name="signup_subtitle">per diventare il nuovo Batman</string>
+    <string name="temperature">Temperatura</string>
+    <string name="title_dashboard">Dashboard</string>
+    <string name="title_home">Lista prodotti</string>
+    <string name="total_quantity">Quantità totale</string>
+    <string name="wine">Vino</string>
+    <string name="your_email">La tua email</string>
+    <string name="your_password">La tua password</string>
+</resources>

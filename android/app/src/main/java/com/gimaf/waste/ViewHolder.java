@@ -1,9 +1,10 @@
 package com.gimaf.waste;
 
-import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+
+import androidx.recyclerview.widget.RecyclerView;
 
 /**
  * This simple viewHolder class will get all the data and find them in the view of the single card
@@ -23,7 +24,7 @@ public class ViewHolder extends RecyclerView.ViewHolder {
         super(itemView);
         right = itemView.findViewById(R.id.right_data);
         left = itemView.findViewById(R.id.left_data);
-        wrapper = itemView.findViewById(R.id.wrapper);
+        wrapper = itemView.findViewById(R.id.wrapper_2);
         type_and_quantity = itemView.findViewById(R.id.type_and_total_quantity);
         quantity_left = itemView.findViewById(R.id.current_quantity);
         message = itemView.findViewById(R.id.brand_table_view);

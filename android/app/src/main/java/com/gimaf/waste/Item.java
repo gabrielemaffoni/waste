@@ -2,7 +2,6 @@ package com.gimaf.waste;
 
 
 import android.content.Context;
-import android.util.ArrayMap;
 import android.util.Log;
 import android.widget.Toast;
 
