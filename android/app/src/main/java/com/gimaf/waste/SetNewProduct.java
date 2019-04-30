@@ -2,6 +2,7 @@ package com.gimaf.waste;
 
 import android.app.DatePickerDialog;
 import android.content.Intent;
+import android.graphics.drawable.Drawable;
 import android.icu.util.Calendar;
 import android.os.Bundle;
 import androidx.appcompat.app.AppCompatActivity;
@@ -17,8 +18,10 @@ import android.widget.Button;
 import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.HorizontalScrollView;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.material.textfield.TextInputEditText;
@@ -47,24 +50,26 @@ import static com.gimaf.waste.Item.QUANTITY_LEFT_DB;
  * Saves the new product on the database and gives the "Go on" to the Raspberry
  */
 
-public class SetNewProduct extends AppCompatActivity implements AdapterView.OnItemSelectedListener {
+public class SetNewProduct extends AppCompatActivity implements AdapterView.OnItemSelectedListener, View.OnClickListener {
     private Spinner pack_size_dropdown;
     private TextInputLayout pick_a_date_layout;
     private TextInputEditText pick_a_date_text;
-
     private Button save_button;
-    private String measure_selected;
-    private String product_type_selected;
+    private String measure_selected, product_type_selected;
     private Calendar expiration_date_calendar;
     private FirebaseUser currentUser;
     private FirebaseAuth auth;
-    private HorizontalScrollView productTypeScrollView;
-    private HorizontalScrollView pack_size_scrollView;
-    private LinearLayout pack_size_linear_layout;
-    private LinearLayout productTypeLinearLayout;
+    private HorizontalScrollView productTypeScrollView,pack_size_scrollView;
+
+    private LinearLayout pack_size_linear_layout, productTypeLinearLayout;
     private Toolbar toolbar;
+    private String selectedSize;
     private CardView milk, cheese, wine, small, medium, big;
-    //TODO: finish code!
+    private ImageView small_image, medium_image, big_image;
+    private TextView small_text, medium_text, big_text, select_product_type;
+
+    //TODO: add the conversion to selected measure
+    //TODO: add conversion from String to Double as the measure. !IMPORTANT
 
 
     @Override
@@ -85,6 +90,19 @@ public class SetNewProduct extends AppCompatActivity implements AdapterView.OnIt
         pack_size_linear_layout = findViewById(R.id.pack_size_linear_layout);
         pack_size_scrollView = findViewById(R.id.pack_size_choice);
         toolbar = findViewById(R.id.new_product_navbar);
+        milk = findViewById(R.id.milk_button);
+        cheese = findViewById(R.id.cheese_button);
+        wine = findViewById(R.id.wine_button);
+        small = findViewById(R.id.small_card);
+        medium = findViewById(R.id.medium_card);
+        big = findViewById(R.id.big_card);
+        small_image = findViewById(R.id.small_image);
+        medium_image = findViewById(R.id.medium_image);
+        big_image = findViewById(R.id.big_image);
+        small_text = findViewById(R.id.small_label);
+        medium_text = findViewById(R.id.medium_label);
+        big_text = findViewById(R.id.big_label);
+        select_product_type = findViewById(R.id.title_select_product_type);
 
         setSpinner(pack_size_dropdown, R.array.product_types);
 
@@ -123,6 +141,8 @@ public class SetNewProduct extends AppCompatActivity implements AdapterView.OnIt
 
             }
         });
+
+
 
     }
 
@@ -233,5 +253,120 @@ public class SetNewProduct extends AppCompatActivity implements AdapterView.OnIt
 
         pick_a_date_text.setText(day_string.format(expiration_date_calendar));
     }
+
+    /**
+     * General onClick method that defines what happens when something in the view is clicked.
+     *
+     * @param view
+     */
+    @Override
+    public void onClick(View view) {
+            int viewID = view.getId();
+            //PRODUCT TYPE SELECTION
+            if (viewID == milk.getId()){
+                defineCardChecker(milk, getResources().getStringArray(R.array.milk_pack_size), getResources().getDrawable(R.drawable.ic_milk, this.getTheme()), "Milk");
+            }
+            if (viewID == wine.getId()){
+                defineCardChecker(wine, getResources().getStringArray(R.array.wine_pack_size), getResources().getDrawable(R.drawable.ic_white_wine, this.getTheme()), "Wine");
+            }
+            if (viewID == cheese.getId()){
+                defineCardChecker(cheese, getResources().getStringArray(R.array.cheese_pack_size), getResources().getDrawable(R.drawable.ic_cheese, this.getTheme()), "Cheese");
+            }
+            if (viewID == small.getId()){
+                getSelectedSize(small, small_text);
+            }
+            if (viewID == medium.getId()){
+                getSelectedSize(medium, medium_text);
+            }
+            if (viewID == big.getId()){
+                getSelectedSize(big, big_text);
+            }
+
+    }
+
+    private void setImagePackSize(String[] stringArray, Drawable drawable) {
+        float small_size = (float) 0.5;
+        float medium_size = (float) 1;
+        float big_size = (float) 1.5;
+        singlePackSize(small_text, small_image, stringArray[0], drawable, small_size);
+        singlePackSize(medium_text, medium_image, stringArray[1], drawable, medium_size);
+        singlePackSize(big_text, big_image, stringArray[2], drawable, big_size);
+        productTypeScrollView.setVisibility(View.VISIBLE);
+        select_product_type.setVisibility(View.GONE);
+    }
+
+    private void singlePackSize(TextView text, ImageView imageView, String label, Drawable image, float size){
+        text.setText(label);
+        imageView.setImageDrawable(image);
+        imageView.setScaleX(size);
+        imageView.setScaleY(size);
+    }
+
+    private void setTypeElevationCard(CardView cardToSet){
+        cardToSet.setElevation(8);
+        if (cardToSet == milk){
+            wine.setCardElevation(0);
+            cheese.setCardElevation(0);
+        } else if (cardToSet == wine){
+            milk.setCardElevation(0);
+            cheese.setCardElevation(0);
+        } else if (cardToSet == cheese){
+            wine.setCardElevation(0);
+            milk.setCardElevation(0);
+        }
+    }
+
+    private void setSizeElevationCard(CardView cardToSet){
+        if (cardToSet == small){
+            big.setCardElevation(0);
+            medium.setCardElevation(0);
+        } else if (cardToSet == big){
+            small.setCardElevation(0);
+            medium.setCardElevation(0);
+        } else if (cardToSet == medium){
+            small.setCardElevation(0);
+            big.setCardElevation(0);
+        }
+    }
+
+    private void revertPackSize(){
+        productTypeScrollView.setVisibility(View.GONE);
+        select_product_type.setVisibility(View.VISIBLE);
+    }
+
+    private void revertTypeElevationCard(){
+        milk.setCardElevation(2);
+        cheese.setCardElevation(2);
+        wine.setCardElevation(2);
+
+    }
+
+    private void revertSizeElevationCard(){
+        small.setCardElevation(2);
+        big.setCardElevation(2);
+        medium.setCardElevation(2);
+    }
+
+    private void defineCardChecker(CardView view, String[] valueArray, Drawable image, String productTypeSelected){
+
+            if (view.getCardElevation() < 8) {
+                product_type_selected = productTypeSelected;
+                setImagePackSize(valueArray, image);
+                setTypeElevationCard(view);
+            } else {
+                revertPackSize();
+                revertTypeElevationCard();
+            }
+        }
+
+    private void getSelectedSize(CardView viewSize, TextView labelSize){
+        if (viewSize.getCardElevation() < 8){
+            selectedSize = labelSize.getText().toString();
+            setSizeElevationCard(viewSize);
+        } else {
+            revertSizeElevationCard();
+        }
+    }
+
 
 }
