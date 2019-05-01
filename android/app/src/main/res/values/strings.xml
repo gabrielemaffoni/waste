@@ -57,4 +57,7 @@
     <string name="item_removed">was removed!</string>
     <string name="color_accent" translatable="false">#3BB54A</string>
     <string name="red_error" translatable="false">#B23B4D</string>
+    <string name="select_product">Please, select the product type first</string>
+    <string name="product_set">has been set</string>
+    <string name="product">Product</string>
 </resources>

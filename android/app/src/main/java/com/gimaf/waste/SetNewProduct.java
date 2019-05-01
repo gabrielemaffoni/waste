@@ -8,6 +8,7 @@ import android.os.Bundle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.cardview.widget.CardView;
+import androidx.constraintlayout.widget.ConstraintLayout;
 
 import android.util.ArrayMap;
 import android.util.Log;
@@ -24,6 +25,7 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 import com.google.firebase.auth.FirebaseAuth;
@@ -32,9 +34,12 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.annotations.Nullable;
 
+import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.time.format.DateTimeFormatter;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.Locale;
 
 import static com.gimaf.waste.Item.BRAND_DB;
 import static com.gimaf.waste.Item.EXPIRATION_DATE_DB;
@@ -52,6 +57,7 @@ import static com.gimaf.waste.Item.QUANTITY_LEFT_DB;
 
 public class SetNewProduct extends AppCompatActivity implements AdapterView.OnItemSelectedListener, View.OnClickListener {
     private Spinner pack_size_dropdown;
+    private String productKey;
     private TextInputLayout pick_a_date_layout;
     private TextInputEditText pick_a_date_text;
     private Button save_button;
@@ -59,14 +65,15 @@ public class SetNewProduct extends AppCompatActivity implements AdapterView.OnIt
     private Calendar expiration_date_calendar;
     private FirebaseUser currentUser;
     private FirebaseAuth auth;
-    private HorizontalScrollView productTypeScrollView,pack_size_scrollView;
+    private HorizontalScrollView productTypeScrollView, pack_size_scrollView;
 
-    private LinearLayout pack_size_linear_layout, productTypeLinearLayout;
+    private LinearLayout pack_size_linear_layout, productTypeLinearLayout, milk_layout, wine_layout, cheese_layout;
     private Toolbar toolbar;
-    private String selectedSize;
+    private Double selectedSize;
     private CardView milk, cheese, wine, small, medium, big;
     private ImageView small_image, medium_image, big_image;
     private TextView small_text, medium_text, big_text, select_product_type;
+    private ConstraintLayout container;
 
     //TODO: add the conversion to selected measure
     //TODO: add conversion from String to Double as the measure. !IMPORTANT
@@ -77,10 +84,11 @@ public class SetNewProduct extends AppCompatActivity implements AdapterView.OnIt
         super.onCreate(savedInstanceState);
         setContentView(R.layout.set_new_item);
         Intent data = getIntent();
-        final String productKey = data.getStringExtra(KEY_DB);
+        productKey = data.getStringExtra(KEY_DB);
+        Log.d("EXTRA RECEIVED", productKey);
         expiration_date_calendar = Calendar.getInstance();
         auth = FirebaseAuth.getInstance();
-
+        container = findViewById(R.id.newProductContainer);
         save_button = findViewById(R.id.save_product);
         pick_a_date_layout = findViewById(R.id.pick_a_date_field);
         pick_a_date_text = findViewById(R.id.pick_a_date_edit_text);
@@ -90,6 +98,8 @@ public class SetNewProduct extends AppCompatActivity implements AdapterView.OnIt
         pack_size_linear_layout = findViewById(R.id.pack_size_linear_layout);
         pack_size_scrollView = findViewById(R.id.pack_size_choice);
         toolbar = findViewById(R.id.new_product_navbar);
+        setSupportActionBar(toolbar);
+        toolbar.setTitleTextColor(getResources().getColor(R.color.white, this.getTheme()));
         milk = findViewById(R.id.milk_button);
         cheese = findViewById(R.id.cheese_button);
         wine = findViewById(R.id.wine_button);
@@ -103,11 +113,45 @@ public class SetNewProduct extends AppCompatActivity implements AdapterView.OnIt
         medium_text = findViewById(R.id.medium_label);
         big_text = findViewById(R.id.big_label);
         select_product_type = findViewById(R.id.title_select_product_type);
+        pack_size_dropdown = findViewById(R.id.choose_measure);
+        milk_layout = findViewById(R.id.milk_layout);
+        wine_layout = findViewById(R.id.wine_layout);
+        cheese_layout = findViewById(R.id.cheese_layout);
+        setSpinner(pack_size_dropdown, R.array.measures);
+        pack_size_dropdown.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
 
-        setSpinner(pack_size_dropdown, R.array.product_types);
+                measure_selected = pack_size_dropdown.getItemAtPosition(i).toString();
+                Log.d("Measure selected is", measure_selected);
+                if (select_product_type.getVisibility() == View.GONE) {
+                    switch (measure_selected) {
+                        case "Pints":
+                            changeViewToPints();
+                            break;
+                        case "Ml":
+                            changeViewToML();
+                            break;
+                        case "L":
+                            changeViewToL();
+                            break;
+                    }
+                }
+            }
 
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
+
+            }
+        });
         currentUser = auth.getCurrentUser();
 
+        milk.setOnClickListener(this);
+        wine.setOnClickListener(this);
+        cheese.setOnClickListener(this);
+        small.setOnClickListener(this);
+        medium.setOnClickListener(this);
+        big.setOnClickListener(this);
 
         /**
          * Shows a calendar view for the expiration date
@@ -127,16 +171,13 @@ public class SetNewProduct extends AppCompatActivity implements AdapterView.OnIt
             @Override
             public void onClick(View v) {
                 //check data
-               // Double pack_size = Double.parseDouble(pack_size_text.getText().toString());
+                updateFirebase(productKey,selectedSize,pick_a_date_text.getText().toString());
+                finish();
+                String textToPrint = getResources().getString(R.string.product)+ " "+ product_type_selected +" "+getResources().getString(R.string.product_set);
+                Snackbar snackbar = Snackbar
+                        .make(container, textToPrint, Snackbar.LENGTH_LONG);
+                snackbar.show();
 
-                String expiration_date = pick_a_date_text.getText().toString();
-
-                product_type_selected = pack_size_dropdown.getSelectedItem().toString();
-
-
-                if ( expiration_date.isEmpty() ||  product_type_selected.isEmpty()) {
-                    Toast.makeText(SetNewProduct.this, "Please, fill all the field first!", Toast.LENGTH_SHORT).show();
-                }
 
 
             }
@@ -154,14 +195,14 @@ public class SetNewProduct extends AppCompatActivity implements AdapterView.OnIt
 
     public void setSpinner(Spinner spinner, int resource_array) {
         ArrayAdapter<CharSequence> dropdown_adapter = ArrayAdapter.createFromResource(this,
-                resource_array, android.R.layout.simple_spinner_item);
-        dropdown_adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+                resource_array, android.R.layout.simple_spinner_dropdown_item);
+        dropdown_adapter.setDropDownViewResource(android.R.layout.select_dialog_singlechoice);
         spinner.setAdapter(dropdown_adapter);
 
     }
 
     /**
-     *  Checks what is selected in the Spinners and sets them on the field
+     * Checks what is selected in the Spinners and sets them on the field
      * @param parent the adapter view from which has been selected
      * @param view the view that has been clicked
      * @param position the position of the view
@@ -169,9 +210,62 @@ public class SetNewProduct extends AppCompatActivity implements AdapterView.OnIt
     @Override
     public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
         if (parent == pack_size_dropdown.getParent()) {
-            product_type_selected = pack_size_dropdown.getItemAtPosition(position).toString();
+            measure_selected = pack_size_dropdown.getItemAtPosition(position).toString();
+            if (select_product_type.getVisibility() == View.GONE) {
+                switch (measure_selected) {
+                    case "Pints":
+                        changeViewToPints();
+                        break;
+                    case "Ml":
+                        changeViewToML();
+                        break;
+                    case "L":
+                        changeViewToL();
+                        break;
+                }
+            }
         }
 
+    }
+
+    private void changeViewToML() {
+        switch (product_type_selected){
+            case "Milk":
+                setImagePackSize(getResources().getStringArray(R.array.milk_ml_pack_size), getResources().getDrawable(R.drawable.ic_milk, this.getTheme()), false);
+                break;
+            case "Wine":
+                setImagePackSize(getResources().getStringArray(R.array.wine_ml_pack_size), getResources().getDrawable(R.drawable.ic_white_wine, this.getTheme()),false);
+                break;
+            default:
+                //DO NOTHING
+                Log.d("Do nothing", "DO NOTHING COMMAND");
+        }
+    }
+
+    private void changeViewToL(){
+        switch (product_type_selected){
+            case "Milk":
+                setImagePackSize(getResources().getStringArray(R.array.milk_l_pack_size), getResources().getDrawable(R.drawable.ic_milk, this.getTheme()), false);
+                break;
+            case "Wine":
+                setImagePackSize(getResources().getStringArray(R.array.wine_l_pack_size), getResources().getDrawable(R.drawable.ic_white_wine, this.getTheme()),false);
+                break;
+            default:
+                //DO NOTHING
+                Log.d("Do nothing", "DO NOTHING COMMAND");
+        }
+    }
+
+    private void changeViewToPints() {
+        switch (product_type_selected){
+            case "Milk":
+                setImagePackSize(getResources().getStringArray(R.array.milk_pints_pack_size), getResources().getDrawable(R.drawable.ic_milk, this.getTheme()), false);
+                break;
+            default:
+                //DO NOTHING
+
+                Log.d("Do nothing", "DO NOTHING COMMAND");
+        }
     }
 
     /**
@@ -188,10 +282,9 @@ public class SetNewProduct extends AppCompatActivity implements AdapterView.OnIt
      * Updates Firebase with the new data coming in
      * @param productKey the product key generated by firebase
      * @param packSize the size of the pack, also called "total_quantity"
-     * @param brandText the brand of the product
      * @param expirationDate the expiration date set by the user
      */
-    public void updateFirebase(String productKey, Double packSize, String brandText,
+    public void updateFirebase(String productKey, Double packSize,
                                String expirationDate) {
         DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference()
                 .child("items").child(currentUser.getUid()).child(productKey);
@@ -199,12 +292,13 @@ public class SetNewProduct extends AppCompatActivity implements AdapterView.OnIt
 
         toUpdate.put(NEW_PRODUCT_DB, "placed");
         toUpdate.put(QUANTITY_DB, packSize);
-        toUpdate.put(BRAND_DB, brandText);
         toUpdate.put(EXPIRATION_DATE_DB, expirationDate);
         toUpdate.put(MEASURE_DB, measure_selected);
         toUpdate.put(PRODUCT_TYPE_DB, product_type_selected);
         toUpdate.put(OPTIMAL_TEMPERATURE_DB, 0);
         toUpdate.put(QUANTITY_LEFT_DB, 0);
+        Log.d("PATH", databaseReference.getPath().toString());
+        Log.d("DATA", toUpdate.toString());
         databaseReference.updateChildren(toUpdate);
     }
 
@@ -248,10 +342,12 @@ public class SetNewProduct extends AppCompatActivity implements AdapterView.OnIt
 
     private void setTodayText(){
 
-        SimpleDateFormat day_string = new SimpleDateFormat("dd/MM/yyyy");
+        int mYear = expiration_date_calendar.get(Calendar.YEAR);
+        int mMonth = expiration_date_calendar.get(Calendar.MONTH);
+        int mDay = expiration_date_calendar.get(Calendar.DAY_OF_MONTH) + 2;
+        String todayDate = (mDay) + "/" + (mMonth) + "/" + (mYear);
 
-
-        pick_a_date_text.setText(day_string.format(expiration_date_calendar));
+        pick_a_date_text.setText(todayDate);
     }
 
     /**
@@ -262,37 +358,46 @@ public class SetNewProduct extends AppCompatActivity implements AdapterView.OnIt
     @Override
     public void onClick(View view) {
             int viewID = view.getId();
-            //PRODUCT TYPE SELECTION
-            if (viewID == milk.getId()){
-                defineCardChecker(milk, getResources().getStringArray(R.array.milk_pack_size), getResources().getDrawable(R.drawable.ic_milk, this.getTheme()), "Milk");
+            Log.d("TAPPED", String.valueOf(view.getId()));
+            switch (viewID){
+                case R.id.milk_button:
+                    defineCardChecker(milk, getResources().getStringArray(R.array.milk_pints_pack_size), getResources().getDrawable(R.drawable.ic_milk, this.getTheme()), "Milk");
+                    break;
+                case R.id.cheese_button:
+                    defineCardChecker(cheese, getResources().getStringArray(R.array.cheese_pack_size), getResources().getDrawable(R.drawable.ic_cheese, this.getTheme()), "Cheese");
+                    break;
+                case R.id.wine_button:
+                    defineCardChecker(wine, getResources().getStringArray(R.array.wine_ml_pack_size), getResources().getDrawable(R.drawable.ic_white_wine, this.getTheme()), "Wine");
+                    break;
+                case R.id.small_card:
+                    getSelectedSize(small, small_text);
+                    break;
+                case R.id.medium_card:
+                    getSelectedSize(medium, medium_text);
+                    break;
+                case R.id.big_card:
+                    getSelectedSize(big, big_text);
+                    break;
+                case R.id.milk_layout:
+                    Log.d("MILK TAPPED", "MILK TAPPED");
+                    break;
+
             }
-            if (viewID == wine.getId()){
-                defineCardChecker(wine, getResources().getStringArray(R.array.wine_pack_size), getResources().getDrawable(R.drawable.ic_white_wine, this.getTheme()), "Wine");
-            }
-            if (viewID == cheese.getId()){
-                defineCardChecker(cheese, getResources().getStringArray(R.array.cheese_pack_size), getResources().getDrawable(R.drawable.ic_cheese, this.getTheme()), "Cheese");
-            }
-            if (viewID == small.getId()){
-                getSelectedSize(small, small_text);
-            }
-            if (viewID == medium.getId()){
-                getSelectedSize(medium, medium_text);
-            }
-            if (viewID == big.getId()){
-                getSelectedSize(big, big_text);
-            }
+
 
     }
 
-    private void setImagePackSize(String[] stringArray, Drawable drawable) {
+    private void setImagePackSize(String[] stringArray, Drawable drawable, boolean change_visibility) {
         float small_size = (float) 0.5;
         float medium_size = (float) 1;
         float big_size = (float) 1.5;
         singlePackSize(small_text, small_image, stringArray[0], drawable, small_size);
         singlePackSize(medium_text, medium_image, stringArray[1], drawable, medium_size);
         singlePackSize(big_text, big_image, stringArray[2], drawable, big_size);
-        productTypeScrollView.setVisibility(View.VISIBLE);
-        select_product_type.setVisibility(View.GONE);
+        if (change_visibility) {
+            pack_size_scrollView.setVisibility(View.VISIBLE);
+            select_product_type.setVisibility(View.GONE);
+        }
     }
 
     private void singlePackSize(TextView text, ImageView imageView, String label, Drawable image, float size){
@@ -330,28 +435,29 @@ public class SetNewProduct extends AppCompatActivity implements AdapterView.OnIt
     }
 
     private void revertPackSize(){
-        productTypeScrollView.setVisibility(View.GONE);
+
         select_product_type.setVisibility(View.VISIBLE);
+        pack_size_scrollView.setVisibility(View.GONE);
     }
 
     private void revertTypeElevationCard(){
-        milk.setCardElevation(2);
-        cheese.setCardElevation(2);
-        wine.setCardElevation(2);
+        milk.setCardElevation(3);
+        cheese.setCardElevation(3);
+        wine.setCardElevation(3);
 
     }
 
     private void revertSizeElevationCard(){
-        small.setCardElevation(2);
-        big.setCardElevation(2);
-        medium.setCardElevation(2);
+        small.setCardElevation(3);
+        big.setCardElevation(3);
+        medium.setCardElevation(3);
     }
 
     private void defineCardChecker(CardView view, String[] valueArray, Drawable image, String productTypeSelected){
-
+        Log.d("TAPPED ON CARD", view.toString());
             if (view.getCardElevation() < 8) {
                 product_type_selected = productTypeSelected;
-                setImagePackSize(valueArray, image);
+                setImagePackSize(valueArray, image, true);
                 setTypeElevationCard(view);
             } else {
                 revertPackSize();
@@ -361,7 +467,7 @@ public class SetNewProduct extends AppCompatActivity implements AdapterView.OnIt
 
     private void getSelectedSize(CardView viewSize, TextView labelSize){
         if (viewSize.getCardElevation() < 8){
-            selectedSize = labelSize.getText().toString();
+            selectedSize = Double.parseDouble(labelSize.getText().toString());
             setSizeElevationCard(viewSize);
         } else {
             revertSizeElevationCard();

@@ -367,6 +367,7 @@ public class MainActivity extends AppCompatActivity {
                                 update_message.setVisibility(View.GONE);
                                 Intent intent = new Intent(getApplicationContext(), SetNewProduct.class);
                                 intent.putExtra(KEY_DB, product_key); // The key will be useful later on to save the data on the database
+                                Log.d("EXTRA PUT", product_key);
                                 startActivity(intent);
                             }
                         });

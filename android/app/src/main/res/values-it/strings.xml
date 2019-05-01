@@ -36,4 +36,7 @@
     <string name="wine">Vino</string>
     <string name="your_email">La tua email</string>
     <string name="your_password">La tua password</string>
+    <string name="select_product">Per piacere, seleziona il tipo di prodotto prima</string>
+    <string name="product">" "</string>
+    <string name="product_set">è stato creato.</string>
 </resources>

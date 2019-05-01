@@ -230,4 +230,13 @@ public class Item {
         }
     }
 
+    public void convertQuantity(){
+        if (this.getMeasure().toLowerCase().equals("pints")){
+            this.setCurrent_quantity(this.getCurrent_quantity()/568);
+            this.setTotal_quantity(this.getTotal_quantity()/568);
+        } else if (this.getMeasure().toLowerCase().equals("liters") || this.getMeasure().toLowerCase().equals("l")){
+            this.setCurrent_quantity(this.getCurrent_quantity()/1000);
+            this.setTotal_quantity(this.getTotal_quantity()/1000);
+        }
+    }
 }

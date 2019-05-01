@@ -7,6 +7,7 @@ import androidx.annotation.*;
 import androidx.appcompat.app.*;
 import android.util.Log;
 import android.widget.TextView;
+import androidx.appcompat.widget.Toolbar;
 
 import com.airbnb.lottie.LottieAnimationView;
 import com.google.firebase.auth.FirebaseAuth;
@@ -38,6 +39,7 @@ public class ItemView extends AppCompatActivity {
     private FirebaseAuth auth;
     private FirebaseUser currentUser;
     private TextView optimal_temperature;
+    private Toolbar bar;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -48,7 +50,6 @@ public class ItemView extends AppCompatActivity {
         String productKey = intent.getStringExtra(KEY_DB);
         Log.d("EXTRA GOT", productKey);
         currentUser = auth.getCurrentUser();
-        brand_text = findViewById(R.id.brand_text);
         product_type = findViewById(R.id.type_and_total_quantity);
         quantity_left = findViewById(R.id.quantity_left_value);
         int_temperature = findViewById(R.id.int_temperature_value);
@@ -56,6 +57,8 @@ public class ItemView extends AppCompatActivity {
         expiration_date = findViewById(R.id.expiration_date_text);
         animationView = findViewById(R.id.item_animation);
         optimal_temperature = findViewById(R.id.opt_temperature_value);
+        bar = findViewById(R.id.toolbar);
+        setSupportActionBar(bar);
         setValues(productKey);
 
     }
@@ -71,8 +74,12 @@ public class ItemView extends AppCompatActivity {
         try {
             Log.d("NUMBER OF SNAPS", dataSnapshot.getValue().toString());
             optimal_temperature.setText(String.format(getResources().getString(R.string.double_format), item.getOptimal_temperature()));
-            brand_text.setText(String.format(getResources().getString(R.string.double_format), item.getTotal_quantity()));
-            product_type.setText(item.getProduct_type());
+            item.convertQuantity();
+            String title = item.getProduct_type();
+            String displayQuantity = item.getTotal_quantity()+ " "+item.getMeasure();
+            product_type.setText(displayQuantity);
+            bar.setTitle(title);
+            bar.setTitleTextColor(getResources().getColor(R.color.white, this.getTheme()));
             String text_for_quantity = String.format(getResources().getString(R.string.double_format),
                     item.getCurrent_quantity()) + " "+item.getMeasure();
             quantity_left.setText(text_for_quantity);
@@ -80,10 +87,9 @@ public class ItemView extends AppCompatActivity {
                 quantity_left.setText(getResources().getText(R.string.finished_product));
                 quantity_left.setTextColor(getColor(R.color.red_error));
             }
-            brand_field.setText(item.getBrand());
             int_temperature.setText(String.format(getResources().getString(R.string.double_format), item.getInternal_temperature()));
             ext_temperature.setText(String.format(getResources().getString(R.string.double_format), item.getExternal_temperature()));
-            expiration_date.setText(item.getExpiration_date()); //TODO: Solve the problem for which it doesn't print the expiration date correctly. Is it for some problem'!
+            expiration_date.setText(item.getExpiration_date());
             this.setTitle(item.getProduct_type());
         } catch (NullPointerException exception) {
             Log.d("Exception", exception.getMessage());
@@ -91,6 +97,7 @@ public class ItemView extends AppCompatActivity {
 
         calculateAnimation(item.getTotal_quantity(), item.getCurrent_quantity());
     }
+
 
     /***
      * Gets the data from the Database and attaches them on the view
@@ -135,4 +142,6 @@ public class ItemView extends AppCompatActivity {
         animationView.playAnimation();
 
     }
+
+
 }

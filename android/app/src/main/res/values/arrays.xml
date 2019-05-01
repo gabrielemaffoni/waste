@@ -14,9 +14,34 @@
         <item>@string/liters</item>
         <item>@string/militers</item>
     </string-array>
-    <string-array name="milk_pack_size">
+    <string-array name="milk_ml_pack_size">
         <item>500</item>
+        <item>1000</item>
+        <item>2000</item>
+    </string-array>
+    <string-array name="milk_l_pack_size">
+        <item>0.5</item>
         <item>1</item>
         <item>2</item>
+    </string-array>
+    <string-array name="milk_pints_pack_size">
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+    </string-array>
+    <string-array name="wine_ml_pack_size">
+        <item>500</item>
+        <item>750</item>
+        <item>2000</item>
+    </string-array>
+    <string-array name="wine_l_pack_size">
+        <item>0.5</item>
+        <item>0.75</item>
+        <item>2</item>
+    </string-array>
+    <string-array name="cheese_pack_size">
+        <item>250</item>
+        <item>500</item>
+        <item>1</item>
     </string-array>
 </resources>

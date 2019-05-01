@@ -47,7 +47,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/new_product_navbar"
-        app:layout_constraintVertical_bias="0.61">
+        app:layout_constraintVertical_bias="0.0">
 
         <TextView
             android:id="@+id/fill_data_title"
@@ -93,6 +93,7 @@
                     android:layout_marginTop="8dp"
                     android:layout_marginEnd="8dp"
                     android:layout_marginBottom="8dp"
+                    android:clickable="true"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
@@ -101,8 +102,10 @@
 
                     <LinearLayout
                         android:id="@+id/milk_layout"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:clickable="true"
                         android:gravity="center|center_horizontal"
                         android:orientation="vertical">
 
@@ -129,10 +132,13 @@
                     android:id="@+id/cheese_button"
                     android:layout_width="110dp"
                     android:layout_height="110dp"
+                    android:layout_gravity="center"
                     android:layout_marginStart="8dp"
                     android:layout_marginTop="8dp"
                     android:layout_marginEnd="8dp"
                     android:layout_marginBottom="8dp"
+                    android:clickable="true"
+                    android:foregroundGravity="center"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
@@ -141,8 +147,10 @@
 
                     <LinearLayout
                         android:id="@+id/cheese_layout"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:clickable="true"
                         android:gravity="center|center_horizontal"
                         android:orientation="vertical">
 
@@ -173,6 +181,7 @@
                     android:layout_marginTop="8dp"
                     android:layout_marginEnd="8dp"
                     android:layout_marginBottom="8dp"
+                    android:clickable="true"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
@@ -181,8 +190,10 @@
 
                     <LinearLayout
                         android:id="@+id/wine_layout"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:clickable="true"
                         android:gravity="center|center_horizontal"
                         android:orientation="vertical">
 
@@ -221,12 +232,12 @@
             android:id="@+id/total_quantity_title"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:gravity="center|fill_vertical"
-            android:orientation="horizontal">
+            android:gravity="center|left"
+            android:orientation="vertical">
 
             <TextView
                 android:id="@+id/total_quantity_label"
-                android:layout_width="200dp"
+                android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_marginTop="15dp"
                 android:text="@string/pack_size_label"
@@ -236,8 +247,8 @@
 
             <androidx.appcompat.widget.AppCompatSpinner
                 android:id="@+id/choose_measure"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
+                android:layout_width="200dp"
+                android:layout_height="40dp"
                 android:layout_weight="1"
                 android:dropDownWidth="20dp"
                 android:entries="@array/measures"
@@ -245,10 +256,21 @@
 
         </LinearLayout>
 
+        <TextView
+            android:id="@+id/title_select_product_type"
+            android:layout_width="match_parent"
+            android:layout_height="110dp"
+            android:background="@color/grey"
+            android:gravity="center"
+            android:text="@string/select_product"
+            android:textAlignment="gravity"
+            android:textColor="@android:color/white" />
+
         <HorizontalScrollView
             android:id="@+id/pack_size_choice"
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
+            android:layout_height="match_parent"
+            tools:visibility="gone">
 
             <LinearLayout
                 android:id="@+id/pack_size_linear_layout"
@@ -264,6 +286,7 @@
                     android:layout_marginTop="8dp"
                     android:layout_marginEnd="8dp"
                     android:layout_marginBottom="8dp"
+                    android:visibility="visible"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
@@ -304,6 +327,7 @@
                     android:layout_marginTop="8dp"
                     android:layout_marginEnd="8dp"
                     android:layout_marginBottom="8dp"
+                    android:visibility="visible"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
@@ -344,6 +368,7 @@
                     android:layout_marginTop="8dp"
                     android:layout_marginEnd="8dp"
                     android:layout_marginBottom="8dp"
+                    android:visibility="visible"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
