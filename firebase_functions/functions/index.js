@@ -4,7 +4,7 @@
  * This code has several functions.
  * - It sends a temperature alarm
  * - Monitors the quantity, if there is a lack of something it sends a notification alert
- * - Sends a new notifiction product if needed
+ * - Sends a new notification product if needed
  * - Sends a notification that the product is expiring.
  *
  * CHANGELOG:
@@ -23,79 +23,68 @@
  */
 
 //CONSTANTS USED IN THE DATABASE
-const opt_temperature = 'opt_temperature';
-const int_temperature = 'int_temperature';
-const ext_temperature = 'ext_temperature';
-const quantity_mm = 'quantity_mm';
-const quantity_left = 'quantity_left';
-const product_type = 'product_type';
-const expiration_days = 'expiration_days';
-const pack_size = 'total_quantity';
+    OPT_TEMPERATURE = 'opt_temperature';
+    INT_TEMPERATURE = 'int_temperature';
+    EXT_TEMPERATURE = 'ext_temperature';
+    QUANTITY_MM = 'quantity_mm';
+    QUANTITY_LEFT = 'quantity_left';
+    TOTAL_QUANTITY = 'total_quantity';
+    EXPIRATION_DAYS = 'expiration_days';
+    PRODUCT_TYPE = 'product_type';
+    TOKEN = 'token';
 //Database initialisation
 const functions = require('firebase-functions');
 const admin = require('firebase-admin');
 admin.initializeApp();
-var message;
 
 /**
  * This method gets the temperature of the product and compares it against the optimal temperature.
  * If it is more than it, it will just send a notification to the user.
  * @type {CloudFunction<Change<DataSnapshot>>}
  */
-exports.temperature_alarm = functions.database.ref('/items/{userID}/{itemID}/').onUpdate((change, context)=>{
+exports.temperature_alarm = functions.database.ref('/items/{userID}/{itemID}/int_temperature').onUpdate(async (change, context)=>{
   console.log("Checking value");
-  const data = change.after.val();
-  const user_id = context.params.userID;
+  const item = {
+    id: context.params.itemID,
+    int_temperature: change.after.val(),
+    opt_temperature: 0
+  };
+
+  const user = {
+    id : context.params.userID,
+    token: ""
+  };
+
+  const payload = {
+    notification: {
+      title: "",
+      body:"",
+    },
+    data: {
+      item_key: item.id,
+      intent_notification: ""
+    }
+  };
+
   console.log("Values checked");
-  let internal_temperature = data.int_temperature;
-  let optimal_temperature = data.opt_temperature;
-  console.log("Internal temperature: "+data.int_temperature);
+  const opt_temperature_promise = admin.database().ref(`/items/${user.id}/${item.id}/opt_temperature`).once('value');
+  const token_snapshot = admin.database().ref(`/users/${user.id}/token/`).once('value');
+  console.log("Internal temperature: "+item.int_temperature);
 
-  message = "";
-
-  if (internal_temperature > optimal_temperature){
-    message = "TMP_ISSUE";
-    const payload = {
-      "notification": {
-        "title": 'Your product is raising temperature!',
-        "body": 'Consider putting it back in your pantry.',
-      },
-      "data": {
-        "item_key": change.after.key,
-        "intent_notification": message
-      }
-    };
-
-    const token_snapshot = admin.database().ref(`/users/${user_id}/token/`).once('value').then((data_snapshot) => {
-      console.log("Sending message", payload);
-      return admin.messaging().sendToDevice(data_snapshot.val(), payload);
-    }, (error) => {
-      console.log(error);
-    });
-
-
+  let promises = await Promise.all([token_snapshot, opt_temperature_promise]);
+  user.token = promises[0].val();
+  item.opt_temperature = promises[1].val();
+  if (item.int_temperature > item.opt_temperature){
+    payload.data.intent_notification = "TMP_ISSUE";
+    payload.notification.title = 'Your product is raising temperature!';
+    payload.notification.body ='Consider putting it back in your pantry.';
   } else {
-    message = "TMP_OKAY";
-    const payload = {
-      "notification": {
-        "title": 'Your product is now okay!',
-        "body": 'Everything seems back to normal :)',
-      },
-      "data": {
-        "item_key": change.after.key,
-        "intent_notification": message
-      }
-    };
-    const token_snapshot = admin.database().ref(`/users/${user_id}/token/`).once('value').then((data_snapshot) => {
-      console.log("Sending message", payload);
-      return admin.messaging().sendToDevice(data_snapshot.val(), payload);
-    }, (error) => {
-      console.log(error);
-    });
-
+    payload.data.intent_notification = "TMP_OKAY";
+    payload.notification.title = 'Your product is now okay!';
+    payload.notification.body = 'Everything seems back to normal :)'
   }
 
-  return message;
+  return admin.messaging().sendToDevice(user.token, payload);
 });
 
 
@@ -107,47 +96,51 @@ exports.temperature_alarm = functions.database.ref('/items/{userID}/{itemID}/').
  */
 
 
-exports.monitor_quantity = functions.database.ref('items/{userID}/{itemID}/current_quantity').onUpdate((snapshot, context)=>{
+exports.monitor_quantity = functions.database.ref('items/{userID}/{itemID}/quantity_left').onUpdate(async (snapshot, context)=>{
   console.log("Checking quantity");
-  const quantity_atm = snapshot.after.val();
-  const product_id = context.params.itemID;
-  const user_id = context.params.userID;
-  const product_type_db = (admin.database().ref(`items/${user_id}/${product_id}/${product_type}`).once('value')).val();
-  const total_quantity_db = admin.database().ref(`items/${user_id}/${product_id}/total_quantity`).once('value').then((quantity_snap)=>{
-    return quantity_snap.val();
-  }, (error) => {console.log(error)});
-  const token = admin.database().ref(`users/${user_id}/token`).once('value').then((token_snap) => {
-    return token_snap.val();
-  },(error) => {
-    console.log(error)
-  });
-  console.log("Token", token);
-  console.log("Total quantity", total_quantity_db);
-  var payload = "";
-  if (quantity_atm < (total_quantity_db/4) && quantity_atm > 0){
-    payload = {
-      "notification": {
-      "title" : `Your ${product_type_db} is almost finishing!`,
-      "body"  : `Do you have it in your pantry?`
-    },
-    "data":{
-      "item_key": product_id,
-      "intent_notification": "PRODUCT_FINISHING"
-    }
-  }
-  } else if (quantity_atm === 0){
-    payload = {"notification":{
-      "title": `Your ${product_type_db} is finished!`,
-      "body": `Should I add it to the list?`
-    },
-  "data":{
-    "item_key": product_id,
-    "intent_notification" : "PRODUCT_FINISHED"
-  }
-}
+  const user = {
+    id: context.params.userID,
+    token: ""
+  };
+
+  const item = {
+    id: context.params.itemID,
+    quantity: snapshot.after.val(),
+    total_quantity: 0,
+    type: ""
+  };
+
+  const payload = {
+      notification: {
+        title: '',
+        body: '',
+      },
+    data:{
+        item_key: item.id,
+        intent_notification: ''
+      }
+  };
+  const product_type_promise = admin.database().ref(`items/${user.id}/${item.id}/${PRODUCT_TYPE}`).once('value');
+  const total_quantity_promise = admin.database().ref(`items/${user.id}/${item.id}/${TOTAL_QUANTITY}`).once('value');
+  const token_promise = admin.database().ref(`users/${user.id}/${TOKEN}`).once('value');
+
+  const promises = await Promise.all([product_type_promise, total_quantity_promise, token_promise]);
+
+  item.type = promises[0].val();
+  item.total_quantity = promises[1].val();
+  user.token = promises[2].val();
+
+  if (item.quantity < (item.total_quantity/4) && item.quantity > 0){
+    payload.notification.title = `Your ${item.type} is almost finishing!`;
+    payload.notification.body = `Do you have it in your pantry?`;
+    payload.data.intent_notification = "PRODUCT_FINISHING";
+  } else if (item.quantity === 0){
+    payload.notification.title = `Your ${item.type} is finished!`;
+    payload.notification.body = 'Should I add it to the list?';
+    payload.data.intent_notification = "PRODUCT_FINISHED";
   }
 
-  return admin.messaging().sendToDevice(token.toString(), payload);
+  return admin.messaging().sendToDevice(user.token, payload);
 });
 
 /**
@@ -156,41 +149,48 @@ exports.monitor_quantity = functions.database.ref('items/{userID}/{itemID}/curre
  * @type {CloudFunction<Change<DataSnapshot>>}
  */
 
-
-exports.define_optimal_temperature = functions.database.ref('/items/{userID}/{itemID}/').onUpdate((data_snapshot,context) => {
+exports.define_optimal_temperature = functions.database.ref('/items/{userID}/{itemID}/opt_temperature').onCreate(async (data_snapshot,context) => {
   console.log("Checking type of product");
-  if (data_snapshot.after.child('new_product').val() === 'placed') {
-    const product_type = data_snapshot.after.child('product_type').val();
-    const product_id = data_snapshot.after.key;
-    const user_id = context.params.userID;
-    let optimal_temperature = 0;
+    const user = {
+      id: context.params.userID
+    };
 
-    switch (product_type.toLowerCase()) {
+    const item = {
+      id: context.params.itemID,
+      opt_temperature: 0,
+      type: ''
+    };
+
+    const item_type_promise = admin.database().ref(`items/${user.id}/${item.id}/${PRODUCT_TYPE}`).once('value');
+    let type = await Promise.all([item_type_promise]);
+    item.type = type[0].val();
+
+    switch (item.type.toLowerCase()) {
       case 'milk':
-        optimal_temperature = 4;
+        item.opt_temperature = 4;
         break;
       case 'red wine':
-        optimal_temperature = 12;
+        item.opt_temperature = 12;
         break;
       case 'white wine':
-        optimal_temperature = 6;
+        item.opt_temperature = 6;
         break;
       case 'dairy product':
-        optimal_temperature = 4;
+        item.opt_temperature = 4;
         break;
       case 'wine':
-        optimal_temperature = 10;
+        item.opt_temperature = 10;
         break;
       default:
-        optimal_temperature = 0;
+        item.opt_temperature = 0;
     }
-    console.log("Optimal temperature set: ", optimal_temperature);
-
-    let data_to_upload = {'opt_temperature': optimal_temperature};
+    console.log("Optimal temperature set: ", item.opt_temperature);
 
 
-    return admin.database().ref(`/items/${user_id}/${product_id}`).update(data_to_upload);
-  }
+
+
+    return admin.database().ref(`/items/${user.id}/${item.id}/${OPT_TEMPERATURE}`).set(item.opt_temperature);
+
 });
 
 /**
@@ -199,33 +199,35 @@ exports.define_optimal_temperature = functions.database.ref('/items/{userID}/{it
  */
 
 
-exports.send_new_product_notification = functions.database.ref('/items/{userID}/{itemID}').onCreate( (snapshot, context) => {
+exports.send_new_product_notification = functions.database.ref('/items/{userID}/{itemID}').onCreate( async (snapshot, context) => {
   const user = {
-    user_id: context.params.userID,
+    id: context.params.userID,
     token: 'token'
   };
-
   const product_key = snapshot.key;
-  console.log("User ID", user.user_id);
-  console.log("token", user.token  );
-  console.log("Getting token snapshot");
-  const tokenisation =  admin.database().ref(`/users/${user.user_id}/token/`).once('value').then((data) =>{
-      user.token = data.val();
-      const payload = {
-        "notification": {
-          "title": 'You just reset the cap!',
-          "body": 'Place it in your pantry and then press "Placed"!',
-        },
-        "data": {
-          "item_key": product_key,
-          "intent_notification": "NEW_PRODUCT"
-        }
-      };
 
-      return admin.messaging().sendToDevice(user.token, payload);
-  }, (error) => {
-    console.log(error);
-  });
+  const payload = {
+    notification: {
+      title: 'You just reset the cap!',
+      body: 'Place it in your pantry and then press "Placed"!'
+    },
+    data :{
+      item_key: product_key,
+      intent_notification: "NEW_PRODUCT"
+    }
+  };
+  console.log("Getting token snapshot");
+
+  const token_snapshot = admin.database().ref(`/users/${user.id}/token/`).once('value');
+  let tokens = await Promise.all([token_snapshot]);
+  console.log(tokens);
+  user.token = tokens[0].val();
+  console.log("User ID", user.id);
+  console.log("token", user.token);
+
+
+  return admin.messaging().sendToDevice(user.token,payload);
+
 
 });
 
@@ -236,47 +238,40 @@ exports.send_new_product_notification = functions.database.ref('/items/{userID}/
 
 
 
-exports.product_expiring_notification = functions.database.ref('items/{userID}/{itemID}/').onUpdate((snapshot, context) =>{
-  const expiration_days_db = snapshot.after.child('expiration_days').val();
-  const user_id = context.params.userID;
+exports.product_expiring_notification = functions.database.ref('items/{userID}/{itemID}/expiration_days').onUpdate(async (change, context) =>{
+  const expiration_days_db = change.after.val();
   const product_key = context.params.itemID;
+
+  const user = {
+    id : context.params.userID,
+    token: ""
+  };
+  const payload ={
+    notification:{
+      title: '',
+      body: ''
+    },
+    data:{
+      item_key: product_key,
+      intent_notification: ""
+    }
+  };
+  const token_snapshot = admin.database().ref(`/users/${user.id}/${TOKEN}/`).once('value');
+  let token_array = await Promise.all([token_snapshot]);
+  user.token = token_array[0].val();
+
   if (expiration_days_db === 0){
-    const token_snapshot = admin.database().ref(`/users/${user_id}/token/`).once('value').then((data_snapshot) => {
-      const payload = {
-        "notification": {
-          "title": `Your product expires today!`,
-          "body": 'Do you need some ideas on how to use it?',
-        },
-        "data": {
-          "item_key": product_key,
-          "intent_notification":"PRODUCT_EXPIRING"
-        }
-      };
+    payload.notification.title = `Your product expires today!`;
+    payload.notification.body = 'Do you need some ideas on how to use it?';
+    payload.data.intent_notification = "PRODUCT_EXPIRED";
 
-      return admin.messaging().sendToDevice(data_snapshot.val(), payload);
-    }, (error) => {
-      console.log(error);
-    });
-  }
-  else if (expiration_days_db < 4){
-    const token_snapshot = admin.database().ref(`/users/${user_id}/token/`).once('value').then((data_snapshot) => {
-      const payload = {
-        "notification": {
-          "title": `Your product is expiring in ${expiration_days_db} days!`,
-          "body": 'Finish it quickly, before you have to throw it away. Do you need some ideas?',
-        },
-        "data": {
-          "item_key": product_key,
-          "intent_notification":"PRODUCT_EXPIRING"
-        }
-      };
+  }  else if (expiration_days_db < 4){
+    payload.notification.title = `Your product is expiring in ${expiration_days_db} days!`;
+    payload.notification.body = 'Finish it quickly, before you have to throw it away. Do you need some ideas?';
+    payload.data.intent_notification = "PRODUCT_EXPIRING";
 
-      return admin.messaging().sendToDevice(data_snapshot.val(), payload);
-    }, (error) => {
-      console.log(error);
-    });
-  }
-  return expiration_days_db
+    }
+  return admin.messaging().sendToDevice(user.token, payload);
 });
 
 
@@ -284,18 +279,22 @@ exports.product_expiring_notification = functions.database.ref('items/{userID}/{
  * This function converts the quantity I get on the database from the raspberry to the quantity in ml.
  * @type {CloudFunction<Change<DataSnapshot>>}
  */
-exports.convert_from_mm_to_ml = functions.database.ref('items/{userID}/{itemID}').onUpdate((snapshot, context)=>{
+exports.convert_from_mm_to_ml = functions.database.ref('items/{userID}/{itemID}/quantity_mm').onUpdate(async (snapshot, context)=>{
   const user_id = context.params.userID;
   //Stores all the values about the item
   const item = {
       id: context.params.itemID,
-      quantity_mm_db: snapshot.after.child(quantity_mm).val(),
+      quantity_mm_db: snapshot.after.val(),
       quantity_converted: 0,
-      total_quantity: snapshot.after.child('total_quantity').val(),
+      total_quantity: 0,
       ml_per_mm: 0
   };
+
+  const total_quantity_promise = admin.database().ref(`/items/${user_id}/${item.id}/${TOTAL_QUANTITY}/`).once('value');
+  let total_quantity_db = await Promise.all([total_quantity_promise]);
+  item.total_quantity = total_quantity_db[0].val();
   console.log(item);
-  //All these values are not arbitrary. They have been measured specidifaclly.
+  //All these values are not arbitrary. They have been measured specifically.
   /**
    * 568 -> Milk bottle of 1 pint. | the threshold of most of the bottles here is 75 mm after that there is a new proportion
    * to do.
@@ -304,7 +303,7 @@ exports.convert_from_mm_to_ml = functions.database.ref('items/{userID}/{itemID}'
    * empty 255
    */
   console.log('item_size', item.total_quantity);
-  console.log('ietm quantity', item.quantity_mm_db);
+  console.log('item quantity', item.quantity_mm_db);
     if (item.total_quantity === 568){
 
           if (item.quantity_mm_db <= 75){
@@ -328,10 +327,8 @@ exports.convert_from_mm_to_ml = functions.database.ref('items/{userID}/{itemID}'
     const quantity_to_multiply = item.ml_per_mm * item.quantity_mm_db;
     item.quantity_converted = item.total_quantity - quantity_to_multiply;
     console.log('Ml per mm', item.ml_per_mm);
-    let data_to_upload = {'quantity_left': item.quantity_converted};
-    console.log("data to upload", data_to_upload);
     //Sends everything to
-    return admin.database().ref(`/items/${user_id}/${item.id}/`).update(data_to_upload)
+    return admin.database().ref(`/items/${user_id}/${item.id}/${QUANTITY_LEFT}`).set(item.quantity_converted);
 
 });
 
